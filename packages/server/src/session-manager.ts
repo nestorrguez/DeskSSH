@@ -4,7 +4,13 @@
 // module is pure and transport-agnostic, so it is unit-testable without SSH.
 
 import { randomUUID } from 'node:crypto';
-import type { Capabilities, OsInfo, TransparencyLog, CommandRecord } from '@deskssh/core';
+import type {
+  Capabilities,
+  OsInfo,
+  PtySession,
+  TransparencyLog,
+  CommandRecord,
+} from '@deskssh/core';
 
 /** Everything the gateway keeps for one live session. */
 export interface SessionEntry {
@@ -16,6 +22,8 @@ export interface SessionEntry {
   readonly os: OsInfo;
   readonly adapter: Capabilities;
   readonly log: TransparencyLog;
+  /** Open an interactive PTY (Terminal app). Optional: not all openers provide it. */
+  readonly openPty?: (cols: number, rows: number) => Promise<PtySession>;
   /** Tear down the underlying SSH connection. */
   readonly close: () => void;
 }

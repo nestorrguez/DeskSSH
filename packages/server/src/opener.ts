@@ -97,6 +97,14 @@ export function createSshOpener(store: KnownHostsStore): SessionOpener {
     const adapter = selectAdapter(os, executor);
     const home = (await executor.exec('echo "$HOME"')).stdout.trim() || '/';
 
-    return { host: session.host, home, os, adapter, log, close: () => session.close() };
+    return {
+      host: session.host,
+      home,
+      os,
+      adapter,
+      log,
+      openPty: (cols, rows) => session.openPty(cols, rows),
+      close: () => session.close(),
+    };
   };
 }

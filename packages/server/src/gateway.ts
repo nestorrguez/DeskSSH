@@ -12,6 +12,7 @@ import {
   type SessionOpener,
 } from './opener.js';
 import { FileKnownHosts } from './known-hosts.js';
+import { attachTerminal } from './terminal.js';
 
 const MAX_BODY_BYTES = 1_000_000; // PEM keys are small; cap to avoid abuse.
 
@@ -77,13 +78,17 @@ export function createGateway(deps: GatewayDeps = {}): Server {
   const manager = deps.manager ?? new SessionManager();
   const opener = deps.opener ?? createSshOpener(new FileKnownHosts());
 
-  return createServer((req, res) => {
+  const server = createServer((req, res) => {
     handle(req, res, manager, opener).catch((err: unknown) => {
       const status = err instanceof HttpError ? err.status : 500;
       const message = err instanceof Error ? err.message : 'Internal error';
       if (!res.headersSent) sendJson(res, status, { error: message });
     });
   });
+
+  // Terminal app: interactive PTY over WebSocket (/api/terminal).
+  attachTerminal(server, manager);
+  return server;
 }
 
 async function handle(

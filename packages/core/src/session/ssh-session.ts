@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { Client } from 'ssh2';
 import type { ClientChannel, ConnectConfig, PseudoTtyOptions, SFTPWrapper } from 'ssh2';
 import type { CommandExecutor, ExecResult } from '../exec/types.js';
-import type { ConnectOptions, SessionState } from './types.js';
+import type { ConnectOptions, PtySession, SessionState } from './types.js';
 
 function fingerprint(key: Buffer): string {
   return `SHA256:${createHash('sha256').update(key).digest('base64').replace(/=+$/, '')}`;
@@ -121,6 +121,22 @@ export class SshSession implements CommandExecutor {
         resolve(stream);
       });
     });
+  }
+
+  /** Open a PTY as a transport-agnostic {@link PtySession} (no ssh2 types leak). */
+  async openPty(cols = 80, rows = 24): Promise<PtySession> {
+    const stream = await this.shell({ cols, rows, term: 'xterm-256color' });
+    return {
+      onData: (listener) => {
+        stream.on('data', (chunk: Buffer) => listener(chunk.toString('utf8')));
+      },
+      onClose: (listener) => {
+        stream.on('close', () => listener());
+      },
+      write: (data) => stream.write(data),
+      resize: (c, r) => stream.setWindow(r, c, 0, 0),
+      close: () => stream.close(),
+    };
   }
 
   /** Open an SFTP channel (file manager / read-write capabilities). */

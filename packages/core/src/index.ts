@@ -33,4 +33,10 @@ export { quote } from './adapters/shell.js';
 
 // Session (transport)
 export { SshSession } from './session/ssh-session.js';
-export type { ConnectOptions, SshAuth, HostKeyInfo, SessionState } from './session/types.js';
+export type {
+  ConnectOptions,
+  SshAuth,
+  HostKeyInfo,
+  SessionState,
+  PtySession,
+} from './session/types.js';

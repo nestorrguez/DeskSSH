@@ -11,9 +11,10 @@ export default defineConfig({
     },
   },
   server: {
-    // Dev: forward API calls to the gateway so the browser stays same-origin.
+    // Dev: forward API calls (and the terminal WebSocket) to the gateway so the
+    // browser stays same-origin.
     proxy: {
-      '/api': 'http://localhost:8717',
+      '/api': { target: 'http://localhost:8717', ws: true },
     },
   },
 });

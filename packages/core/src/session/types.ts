@@ -36,3 +36,20 @@ export interface ConnectOptions {
 
 /** Lifecycle of a session (FR-003). */
 export type SessionState = 'idle' | 'connecting' | 'connected' | 'closed' | 'error';
+
+/**
+ * An interactive pseudo-terminal over SSH (the Terminal app, FR-030/031). A thin
+ * transport-agnostic wrapper so callers never touch ssh2 channel types directly.
+ */
+export interface PtySession {
+  /** Subscribe to terminal output (already decoded as UTF-8). */
+  onData(listener: (chunk: string) => void): void;
+  /** Subscribe to the channel closing. */
+  onClose(listener: () => void): void;
+  /** Send user input to the shell. */
+  write(data: string): void;
+  /** Tell the remote PTY about a new terminal size. */
+  resize(cols: number, rows: number): void;
+  /** Close the channel. */
+  close(): void;
+}

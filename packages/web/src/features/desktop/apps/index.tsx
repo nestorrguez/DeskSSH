@@ -1,23 +1,13 @@
-import { Folder, Info, TerminalSquare, Activity, FileText, Construction } from 'lucide-react';
+import { Folder, Info, TerminalSquare, Activity, FileText } from 'lucide-react';
 import type { Translator } from '@/i18n';
-import type { AppContext, AppDefinition } from '../types';
+import type { AppDefinition } from '../types';
 import { FilesApp } from './FilesApp';
 import { MonitorApp } from './MonitorApp';
 import { SystemApp } from './SystemApp';
 import { StallmanApp } from './StallmanApp';
+import { TerminalApp } from './TerminalApp';
 
-function ComingSoon({ t }: AppContext) {
-  return (
-    <div className="grid h-full place-items-center p-6 text-center text-muted-foreground">
-      <div className="flex flex-col items-center gap-2">
-        <Construction className="size-8" aria-hidden />
-        <p className="text-sm">{t('desktop.comingSoon')}</p>
-      </div>
-    </div>
-  );
-}
-
-/** The apps available in the launcher. Terminal is a placeholder pending its slice. */
+/** The apps available in the launcher. */
 export function getApps(t: Translator): AppDefinition[] {
   return [
     {
@@ -52,8 +42,8 @@ export function getApps(t: Translator): AppDefinition[] {
       id: 'terminal',
       title: t('apps.terminal'),
       icon: TerminalSquare,
-      defaultSize: { w: 620, h: 400 },
-      render: (ctx) => <ComingSoon {...ctx} />,
+      defaultSize: { w: 640, h: 420 },
+      render: (ctx) => <TerminalApp {...ctx} />,
     },
   ];
 }
