@@ -1,65 +1,66 @@
 <h1 align="center">DeskSSH</h1>
 
 <p align="center">
-  <strong>Un escritorio gráfico sobre SSH puro.</strong><br>
-  La GUI se sintetiza en el cliente; cada acción se traduce en comandos que se
-  ejecutan en el host remoto. <em>No es escritorio remoto.</em>
+  <strong>A graphical desktop over plain SSH.</strong><br>
+  The GUI is synthesized on the client; every action is translated into commands
+  executed on the remote host. <em>It is not remote desktop.</em>
 </p>
 
 ---
 
-## ¿Qué es?
+## What is it?
 
-Conectas por SSH a un servidor **sin entorno gráfico** y DeskSSH te muestra un
-escritorio familiar —gestor de archivos, terminal, monitor del sistema, editor,
-gestor de servicios…—. Detrás, cada clic ejecuta el comando equivalente (`ls`,
-`stat`, `mv`, `systemctl`, `ps`…) y la interfaz se construye a partir de su salida.
+You connect via SSH to a server **with no graphical environment** and DeskSSH
+shows you a familiar desktop —file manager, terminal, system monitor, editor,
+service manager…—. Behind the scenes, every click runs the equivalent command
+(`ls`, `stat`, `mv`, `systemctl`, `ps`…) and the interface is built from its
+output.
 
-### Lo que lo hace diferente
+### What makes it different
 
-- **No es VNC/RDP/X.** No viajan píxeles: la GUI se genera localmente.
-- **Agentless.** No instala nada en el servidor; solo necesita SSH y utilidades
-  POSIX estándar.
-- **Transparente.** Siempre puedes ver el comando que hay detrás de cada acción.
-- **Open source 100%.**
+- **Not VNC/RDP/X.** No pixels travel: the GUI is generated locally.
+- **Agentless.** Installs nothing on the server; only needs SSH and standard POSIX
+  utilities.
+- **Transparent.** You can always see the command behind each action.
+- **100% open source.**
 
-## Origen y motivación
+## Origin and motivation
 
-DeskSSH empezó como un proyecto en **ASP.NET con .NET 8**. A medida que crecía, me
-sentí rebasado por la enorme cantidad de comandos y casos que la herramienta podía
-llegar a cubrir. Empecé a revisar y mejorar el código apoyándome en IA, pero
-terminé tomando una decisión más radical: **reiniciar el proyecto desde cero**,
-también con ayuda de IA, para:
+DeskSSH started as a project in **ASP.NET with .NET 8**. As it grew, I felt
+overwhelmed by the sheer number of commands and cases the tool could end up
+covering. I began reviewing and improving the code with the help of AI, but ended
+up making a more radical decision: **restart the project from scratch**, also with
+AI, in order to:
 
-- usar lenguajes y tecnologías **más aceptadas por la comunidad**, y
-- aprovechar la **facilidad de distribución de npm** y conseguir una adopción sencilla.
+- use languages and technologies **more widely accepted by the community**, and
+- leverage **npm's ease of distribution** for simple adoption.
 
-Esta reescritura se desarrolla con **Spec-Driven Development**: las decisiones se
-documentan en `specs/` antes de escribir código.
+This rewrite is developed with **Spec-Driven Development**: decisions are
+documented in `specs/` before any code is written.
 
-La razón de hacerlo **open source** es simple: quiero que DeskSSH llegue a ser una
-herramienta **realmente útil y popular**, construida y mejorada por la comunidad.
+The reason for making it **open source** is simple: I want DeskSSH to become a
+**genuinely useful and popular** tool, built and improved by the community.
 
-## Estado
+## Status
 
-🚧 **En diseño.** El proyecto se desarrolla con **Spec-Driven Development**: ahora
-mismo existe la especificación; el código llega después. Empieza por:
+🚧 **In design.** The project is developed with **Spec-Driven Development**: right
+now only the specification exists; code comes later. Start with:
 
-- [`specs/vision.md`](specs/vision.md) — el porqué y el hacia dónde (la visión).
-- [`specs/constitution.md`](specs/constitution.md) — principios del proyecto.
-- [`specs/001-core/spec.md`](specs/001-core/spec.md) — qué hace DeskSSH.
-- [`specs/001-core/plan.md`](specs/001-core/plan.md) — cómo se construirá.
-- [`specs/glossary.md`](specs/glossary.md) — vocabulario del dominio.
+- [`specs/vision.md`](specs/vision.md) — the why and the where-to (the vision).
+- [`specs/constitution.md`](specs/constitution.md) — the project's principles.
+- [`specs/001-core/spec.md`](specs/001-core/spec.md) — what DeskSSH does.
+- [`specs/001-core/plan.md`](specs/001-core/plan.md) — how it will be built.
+- [`specs/glossary.md`](specs/glossary.md) — the domain vocabulary.
 
-## Cómo contribuir
+## How to contribute
 
-Este proyecto sigue SDD: las discusiones de diseño ocurren en `specs/` **antes**
-que en el código. Si quieres proponer algo, abre la conversación sobre el
-documento correspondiente. (Guía de contribución detallada: pendiente — `M0`.)
+This project follows SDD: design discussions happen in `specs/` **before** they
+reach the code. To propose something, open the conversation on the relevant
+document. (Detailed contribution guide: pending — `M0`.)
 
-## Licencia
+## License
 
-[**GNU AGPL-3.0-or-later**](LICENSE). Copyleft fuerte con cláusula de red: si
-modificas DeskSSH y lo ofreces como servicio accesible por red, debes publicar tus
-cambios. Elegida para que el proyecto y todas sus mejoras sigan siendo libres.
-Ver [`specs/constitution.md`](specs/constitution.md), Artículo 9.
+[**GNU AGPL-3.0-or-later**](LICENSE). Strong copyleft with a network clause: if you
+modify DeskSSH and offer it as a network-accessible service, you must publish your
+changes. Chosen so the project and all its improvements stay free. See
+[`specs/constitution.md`](specs/constitution.md), Article 9.

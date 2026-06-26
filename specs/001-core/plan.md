@@ -1,225 +1,222 @@
-# Plan técnico — 001 Core
+# Technical plan — 001 Core
 
-**Cómo** se construye lo descrito en [`spec.md`](./spec.md), respetando la
-[`constitution.md`](../constitution.md). Las propuestas de stack son el punto de
-partida recomendado, no un dogma; las decisiones abiertas se marcan
-`[NECESITA DECISIÓN]`.
+**How** to build what [`spec.md`](./spec.md) describes, respecting
+[`constitution.md`](../constitution.md). The stack proposals are the recommended
+starting point, not dogma; open decisions are marked `[NEEDS DECISION]`.
 
 ---
 
-## 1. Resolución del conflicto web vs escritorio
+## 1. Resolving the web vs desktop conflict
 
-Decisión de registro: **núcleo agnóstico + entrega web-first; desktop como
-empaquetado posterior.**
+Decision of record: **agnostic core + web-first delivery; desktop as later
+packaging.**
 
-Razones:
+Reasons:
 
-- El usuario quiere que "cualquiera pueda acceder en la red" → favorece web.
-- El **navegador no puede abrir conexiones SSH/TCP crudas**, así que en el modelo
-  web la sesión SSH debe vivir en un **backend** (gateway). Eso obliga, de todos
-  modos, a tener un núcleo separable de la UI (Art. 5).
-- Una vez que el núcleo es independiente, el **desktop** es simplemente
-  empaquetar ese mismo núcleo localmente (p. ej. Tauri/Electron levantando el
-  backend en `localhost`), sin reescribir lógica.
+- The user wants "anyone to be able to access it on the network" → favors web.
+- The **browser cannot open raw SSH/TCP connections**, so in the web model the SSH
+  session must live in a **backend** (gateway). That forces, anyway, a core
+  separable from the UI (Art. 5).
+- Once the core is independent, the **desktop** is simply packaging that same core
+  locally (e.g. Tauri/Electron starting the backend on `localhost`), with no logic
+  rewrite.
 
-Resultado: **una sola base de lógica**, dos formas de entrega. Empezamos por web.
-**Decisión confirmada (2026-06-25).**
+Result: **a single logic base**, two delivery forms. We start with web. **Decision
+confirmed (2026-06-25).**
 
 ```
 ┌────────────────────────────┐        ┌───────────────────────────────┐
-│  Frontend (web / desktop)  │  WS/   │  Backend (gateway DeskSSH)    │
-│  shell de escritorio + UI  │ <────> │  sesiones SSH + API           │
-│  React + TS                │  HTTP  │  usa el NÚCLEO                 │
+│  Frontend (web / desktop)  │  WS/   │  Backend (DeskSSH gateway)    │
+│  desktop shell + UI        │ <────> │  SSH sessions + API           │
+│  React + TS                │  HTTP  │  uses the CORE                │
 └────────────────────────────┘        │   ┌────────────────────────┐  │   SSH
-                                       │   │  core (agnóstico)      │  │ <─────> Host
-                                       │   │  adaptadores, parsers, │  │  remoto
-                                       │   │  apps, sesiones        │  │ (POSIX)
+                                       │   │  core (agnostic)       │  │ <─────> Remote
+                                       │   │  adapters, parsers,    │  │  host
+                                       │   │  apps, sessions        │  │ (POSIX)
                                        │   └────────────────────────┘  │
                                        └───────────────────────────────┘
 ```
 
-## 2. Arquitectura por capas
+## 2. Layered architecture
 
-1. **`core`** (agnóstico, sin UI ni I/O de red propia de presentación):
-   - *Gestor de sesiones*: abstracción sobre una conexión SSH (ejecutar comando,
-     abrir PTY, abrir SFTP).
-   - *Adaptadores de SO*: detección + comandos específicos por familia (Art. 6).
-   - *Parsers*: convierten salida de comandos en estructuras de datos; con
-     fallback a salida cruda (Art. 7).
-   - *Apps*: cada app define qué datos pide y qué comandos ejecuta (gestor de
-     archivos, procesos, servicios, monitor, editor, logs).
-   - *Transparencia*: cada comando ejecutado se registra/expone (Art. 3).
-2. **`server`** (gateway web): mantiene sesiones SSH vivas, autentica al usuario,
-   expone una API (HTTP para acciones puntuales, WebSocket para PTY y streams),
-   aísla sesiones entre usuarios.
-3. **`web`** (frontend): shell de escritorio (ventanas, taskbar, lanzador) y las
-   vistas de cada app. Habla con `server`, nunca con SSH directamente.
-4. **`desktop`** (posterior): empaqueta `server` + `web` en una app local.
+1. **`core`** (agnostic, no UI nor presentation network I/O):
+   - *Session manager*: abstraction over an SSH connection (run command, open PTY,
+     open SFTP).
+   - *OS adapters*: detection + family-specific commands (Art. 6).
+   - *Parsers*: turn command output into data structures; with fallback to raw
+     output (Art. 7).
+   - *Apps*: each app defines what data it requests and what commands it runs (file
+     manager, processes, services, monitor, editor, logs).
+   - *Transparency*: every executed command is logged/exposed (Art. 3).
+2. **`server`** (web gateway): keeps SSH sessions alive, authenticates the user,
+   exposes an API (HTTP for one-off actions, WebSocket for PTY and streams),
+   isolates sessions between users.
+3. **`web`** (frontend): desktop shell (windows, taskbar, launcher) and each app's
+   views. Talks to `server`, never to SSH directly.
+4. **`desktop`** (later): packages `server` + `web` into a local app.
 
-## 3. Stack propuesto (v1)
+## 3. Proposed stack (v1)
 
-`[NECESITA DECISIÓN]` confirmar; alternativas anotadas.
+`[NEEDS DECISION]` to confirm; alternatives noted.
 
-- **Lenguaje:** TypeScript en todo el stack → una sola lengua baja la barrera de
-  contribución (Art. 9).
-- **Monorepo:** pnpm workspaces. Paquetes: `core`, `server`, `web` (y luego
+- **Language:** TypeScript across the stack → a single language lowers the
+  contribution barrier (Art. 9).
+- **Monorepo:** pnpm workspaces. Packages: `core`, `server`, `web` (and later
   `desktop`).
-- **Backend (`server`):** Node.js + librería SSH `ssh2` (madura, soporta exec,
-  PTY y SFTP) + WebSocket (`ws`). *Alternativa:* Rust (`russh`) por seguridad/
-  rendimiento, a coste de mayor barrera de entrada → se descarta para v1.
-- **Frontend (`web`):** React + TypeScript. Terminal con **`xterm.js`**.
-  Ventanas movibles/redimensionables con una librería ligera (p. ej. estilo
-  `react-rnd`) o componentes propios. `[NECESITA DECISIÓN]` framework de UI/estilos.
-- **Desktop (futuro):** **Tauri** preferido (ligero, Rust) sobre Electron, salvo
-  que se quiera reusar Node del `server` dentro del binario → entonces Electron.
+- **Backend (`server`):** Node.js + the `ssh2` SSH library (mature, supports exec,
+  PTY and SFTP) + WebSocket (`ws`). *Alternative:* Rust (`russh`) for
+  security/performance, at the cost of a higher entry barrier → discarded for v1.
+- **Frontend (`web`):** React + TypeScript. Terminal with **`xterm.js`**.
+  Movable/resizable windows with a lightweight library (e.g. `react-rnd` style) or
+  custom components. `[NEEDS DECISION]` UI/styling framework.
+- **Desktop (future):** **Tauri** preferred (lightweight, Rust) over Electron,
+  unless reusing the `server`'s Node inside the binary is desired → then Electron.
 
-## 4. Diseño del núcleo
+## 4. Core design
 
-### Contrato de capacidades (IR de adaptadores)
+### Capability contract (adapter IR)
 
-El núcleo define un **contrato de capacidades**: un catálogo cerrado de operaciones
-abstractas y **tipadas** que las apps invocan **sin saber en qué SO corren**. Es el
-"lenguaje intermedio" del sistema (una *representación intermedia*, IR). Dos piezas:
+The core defines a **capability contract**: a closed catalog of abstract, **typed**
+operations that apps invoke **without knowing which OS they run on**. It is the
+system's "intermediate language" (an *intermediate representation*, IR). Two pieces:
 
-1. **Contrato (interfaz tipada).** Cada capacidad declara entradas y, sobre todo,
-   una **salida normalizada**. Ejemplos:
-   - `listDir(path) → FileEntry[]` — no texto, sino un array de
+1. **Contract (typed interface).** Each capability declares inputs and, above all, a
+   **normalized output**. Examples:
+   - `listDir(path) → FileEntry[]` — not text, but an array of
      `{ name, type, size, mode, owner, mtime }`.
    - `listProcesses() → Process[]`
    - `readFile(path) → bytes` · `writeFile(path, bytes) → void`
    - `serviceAction(name, action) → ServiceState`
 
-   El valor está en el **tipo de la salida**: si una app sabe que `listDir`
-   devuelve un `FileEntry[]`, ya no le importa cómo se obtuvo ni en qué plataforma.
+   The value is in the **output type**: if an app knows `listDir` returns a
+   `FileEntry[]`, it no longer cares how it was obtained nor on which platform.
 
-2. **Manifiestos de adaptador (declarativos) + válvula de escape.** Cada plataforma
-   implementa el contrato. El 80% de los casos, de forma **declarativa** (plantilla
-   de comando + spec de normalización de la salida); el 20% difícil (busybox,
-   PowerShell) con un **hook en código**.
+2. **Adapter manifests (declarative) + escape hatch.** Each platform implements the
+   contract. 80% of cases **declaratively** (command template + output normalization
+   spec); the hard 20% (busybox, PowerShell) with a **code hook**.
 
-**Reglas que lo sostienen:**
-- Las apps **nunca** parsean salida cruda; solo consumen tipos del contrato. El
-  parseo y su *fallback* viven en el adaptador (refuerza el Art. 7).
-- **Normalizar en origen**: pedir salida estructurada (`stat -c`, `ps -eo`,
-  `ConvertTo-Json`…) en vez de parsear formato humano.
-- **Huecos de capacidad**: si una plataforma no soporta una operación (p. ej.
-  `chmod` en Windows), el adaptador la declara *no soportada* y la UI degrada con
-  elegancia, en lugar de fingir.
+**Rules that hold it together:**
+- Apps **never** parse raw output; they only consume contract types. Parsing and its
+  *fallback* live in the adapter (reinforces Art. 7).
+- **Normalize at the source**: request structured output (`stat -c`, `ps -eo`,
+  `ConvertTo-Json`…) instead of parsing human format.
+- **Capability gaps**: if a platform doesn't support an operation (e.g. `chmod` on
+  Windows), the adapter declares it *unsupported* and the UI degrades gracefully
+  instead of pretending.
 
-#### Primitivas no interactivas > pilotar TUIs
+#### Non-interactive primitives > driving TUIs
 
-Corolario del contrato (y respuesta a "cómo emular nano"): DeskSSH **no maneja
-herramientas interactivas remotas** (nano, vim, top…) enviándoles pulsaciones por
-un PTY —sería frágil e imposible de normalizar—. Usa **primitivas no interactivas
-y estructuradas** y **emula la experiencia en el cliente**:
-- **Editor** = `readFile` + `writeFile` + un editor propio en la GUI (no se lanza
-  nano en el remoto).
-- **Monitor** = `listProcesses`/`systemMetrics` por *polling*, no un `top` vivo.
-- La **única** excepción deliberada es la **app de terminal**, que sí expone el
-  shell crudo (ahí el usuario ve `bash`/`PowerShell`/`csh`).
+A corollary of the contract (and the answer to "how to emulate nano"): DeskSSH
+**does not drive remote interactive tools** (nano, vim, top…) by sending keystrokes
+over a PTY —it would be fragile and impossible to normalize—. It uses
+**non-interactive, structured primitives** and **emulates the experience on the
+client**:
+- **Editor** = `readFile` + `writeFile` + a custom GUI editor (no remote nano is
+  launched).
+- **Monitor** = `listProcesses`/`systemMetrics` by *polling*, not a live `top`.
+- The **only** deliberate exception is the **terminal** app, which does expose the
+  raw shell (there the user sees `bash`/`PowerShell`/`csh`).
 
-### Adaptadores de SO
-- El contrato anterior expone una **interfaz uniforme** (`listDir`, `stat`,
+### OS adapters
+- The contract above exposes a **uniform interface** (`listDir`, `stat`,
   `listProcesses`, `listServices`, `serviceAction`, `systemMetrics`, …).
-- Cada **familia de SO** es un adaptador que implementa ese contrato, de forma
-  declarativa cuando es posible.
-  **v1 cubre solo Debian/Ubuntu/Mint** (ver roadmap de hosts abajo).
-- Detección al conectar (`/etc/os-release`, `uname`), con un adaptador POSIX
-  genérico de respaldo para Unix-likes aún no soportados.
-- Preferir salidas legibles por máquina (`stat -c '%n|%s|%a|...'`, `ps -eo ...`,
-  flags `--json` cuando existan) sobre parsear formato humano.
+- Each **OS family** is an adapter implementing that contract, declaratively when
+  possible. **v1 covers only Debian/Ubuntu/Mint** (see host roadmap below).
+- Detection on connect (`/etc/os-release`, `uname`), with a generic POSIX fallback
+  adapter for not-yet-supported Unix-likes.
+- Prefer machine-readable output (`stat -c '%n|%s|%a|...'`, `ps -eo ...`, `--json`
+  flags where available) over parsing human format.
 
-#### Roadmap de hosts soportados
+#### Supported-host roadmap
 
-El número de tier indica **prioridad de roadmap, NO dificultad** (ver columna
-*Esfuerzo*). Se prioriza Windows por popularidad pese a ser el más costoso.
+The tier number indicates **roadmap priority, NOT difficulty** (see the *Effort*
+column). Windows is prioritized for popularity despite being the most costly.
 
-| Tier | Hosts | Esfuerzo | Notas |
-|------|-------|----------|-------|
+| Tier | Hosts | Effort | Notes |
+|------|-------|--------|-------|
 | **1** (v1) | Debian / Ubuntu / Mint | base | POSIX + GNU coreutils + systemd |
-| **2** | Windows | **alto** | No-POSIX: familia de adaptadores PowerShell propia. Sigue siendo agentless (PowerShell viene en el SO). Prioridad por popularidad, no por facilidad. |
-| **3** | Resto de Linux mainstream (RHEL/Fedora/Rocky, Arch, openSUSE) | bajo | Mismo paradigma que v1 (systemd + GNU); difieren sobre todo en el gestor de paquetes |
-| **4** | macOS, FreeBSD | medio | Userland BSD; init `launchd` (macOS) / `rc.d` (FreeBSD), no systemd |
-| **5** | Alpine | medio | `busybox` (flags recortados), OpenRC, musl |
+| **2** | Windows | **high** | Non-POSIX: its own PowerShell adapter family. Still agentless (PowerShell ships with the OS). Prioritized for popularity, not ease. |
+| **3** | Rest of mainstream Linux (RHEL/Fedora/Rocky, Arch, openSUSE) | low | Same paradigm as v1 (systemd + GNU); differ mainly in the package manager |
+| **4** | macOS, FreeBSD | medium | BSD userland; init `launchd` (macOS) / `rc.d` (FreeBSD), not systemd |
+| **5** | Alpine | medium | `busybox` (trimmed flags), OpenRC, musl |
 
-> Nota constitución: cuando llegue el Tier 2, habrá que **generalizar la redacción
-> "utilidades POSIX" del Art. 2** (sigue siendo agentless, pero ya no POSIX).
+> Constitution note: when Tier 2 arrives, the **"POSIX utilities" wording of Art. 2
+> will need generalizing** (still agentless, but no longer POSIX).
 
-### Apertura de archivos: handlers y rutas (FR-025)
+### File opening: handlers and routes (FR-025)
 
-- **Registro de *handlers* por tipo de archivo:** cada app DeskSSH declara qué
-  tipos sabe abrir. Es la base de "Abrir" (handler por defecto) y "Abrir con"
-  (elegir handler), y la semilla de extensibilidad para futuras apps.
-- **Dos rutas de apertura:**
-  - **(A) Render en DeskSSH:** `readFile` del contrato → se pinta en un handler de
-    la GUI. Con **límite de tamaño**/aviso (Art. 8); sin handler para el tipo →
-    se ofrece la ruta B.
-  - **(B) *Handoff* al cliente:** descarga por **SFTP en streaming** (no cargar en
-    memoria) a la máquina local del usuario.
-- **Limitación web vs desktop (`[NECESITA DECISIÓN]`):** en **desktop**
-  (Tauri/Electron) se descarga y se invoca al SO para abrir con el programa por
-  defecto; en **web**, el navegador solo puede descargar (e, inline según el tipo),
-  no forzar la app por defecto del SO.
+- **File-type handler registry:** each DeskSSH app declares which types it can open.
+  It is the basis of "Open" (default handler) and "Open with" (choose handler), and
+  the seed of extensibility for future apps.
+- **Two opening routes:**
+  - **(A) Render in DeskSSH:** the contract's `readFile` → painted by a GUI handler.
+    With a **size limit**/warning (Art. 8); no handler for the type → route B is
+    offered.
+  - **(B) *Handoff* to the client:** download over **streaming SFTP** (don't load
+    into memory) to the user's local machine.
+- **Web vs desktop limitation (`[NEEDS DECISION]`):** on **desktop**
+  (Tauri/Electron) it downloads and invokes the OS to open with the default program;
+  on **web**, the browser can only download (and inline depending on type), not force
+  the OS's default app.
 
-### Parsers y resiliencia
-- Cada parser recibe salida + código de salida; ante formato inesperado, devuelve
-  un resultado "degradado" con la salida cruda (Art. 7), nunca lanza y rompe.
+### Parsers and resilience
+- Each parser receives output + exit code; on unexpected format it returns a
+  "degraded" result with the raw output (Art. 7), never throwing and breaking.
 
-### Transparencia
-- Toda ejecución pasa por un único punto que registra `{comando, host, timestamp,
-  exitCode}` y lo hace consultable desde la UI (FR-013, Art. 3).
+### Transparency
+- Every execution goes through a single point that logs `{command, host, timestamp,
+  exitCode}` and makes it queryable from the UI (FR-013, Art. 3).
 
-### Rendimiento (Art. 8)
-- Caché de listados del VFS con invalidación por acción.
-- Batching de comandos relacionados en una sola invocación cuando sea posible.
-- UI optimista en operaciones de archivos, con reconciliación.
+### Performance (Art. 8)
+- VFS listing cache with per-action invalidation.
+- Batching related commands into a single invocation when possible.
+- Optimistic UI on file operations, with reconciliation.
 
-## 5. Seguridad (Art. 4)
+## 5. Security (Art. 4)
 
-- El backend es la superficie crítica: autenticación de usuario del gateway,
-  aislamiento estricto de sesiones por usuario, rate limiting.
-- Secretos: nunca en claro ni en logs. `[NECESITA DECISIÓN]` almacén (keychain del
-  SO / cifrado local con clave derivada / no persistir y pedir cada vez).
-- Acciones destructivas: confirmación obligatoria en la capa de app (FR-090).
-- Verificación de host key SSH (evitar MITM); política de `known_hosts`.
-- Auditoría: el registro de transparencia sirve también como traza de auditoría.
+- The backend is the critical surface: gateway user authentication, strict per-user
+  session isolation, rate limiting.
+- Secrets: never in plain text nor in logs. `[NEEDS DECISION]` store (OS keychain /
+  local encryption with a derived key / no persistence, ask each time).
+- Destructive actions: mandatory confirmation at the app layer (FR-090).
+- SSH host key verification (avoid MITM); `known_hosts` policy.
+- Auditing: the transparency log also serves as an audit trail.
 
-## 6. Fases / hitos
+## 6. Phases / milestones
 
-**v1 = corte enfocado, accesibilidad primero.** App set de v1: conexión/hosts,
-shell de escritorio, gestor de archivos, editor de texto, terminal y **monitor del
-sistema**. Procesos, servicios, visor de logs y paquetes quedan **post-v1**.
+**v1 = focused cut, accessibility first.** v1 app set: connection/hosts, desktop
+shell, file manager, text editor, terminal and **system monitor**. Processes,
+services, log viewer and packages are **post-v1**.
 
-- **M0 — Andamiaje:** monorepo, paquetes vacíos, CI básica, licencia, contribuir.
-- **M1 — Núcleo de conexión:** sesión SSH (exec/PTY/SFTP) + detección de SO +
-  adaptador Debian/Ubuntu + base del contrato de capacidades. Demostrable por
-  tests/CLI mínima.
-- **M2 — Shell + Terminal + Gestor de archivos:** primer escritorio usable.
-- **M3 — Editor de texto + Monitor del sistema + transparencia en UI:** **completa
-  la v1.**
-- **── 🚀 Release v1 ──**
-- **Post-v1 (apps de admin):** Procesos + Servicios + Visor de logs + Paquetes.
-- **Post-v1 (hosts):** bajar por el roadmap de tiers (Windows → resto Linux → …).
-- **Post-v1 (desktop):** empaquetado Tauri/Electron del mismo núcleo.
+- **M0 — Scaffolding:** monorepo, empty packages, basic CI, license, contributing.
+- **M1 — Connection core:** SSH session (exec/PTY/SFTP) + OS detection +
+  Debian/Ubuntu adapter + capability-contract base. Demonstrable via tests/minimal
+  CLI.
+- **M2 — Shell + Terminal + File manager:** first usable desktop.
+- **M3 — Text editor + System monitor + transparency in the UI:** **completes v1.**
+- **── 🚀 v1 release ──**
+- **Post-v1 (admin apps):** Processes + Services + Log viewer + Packages.
+- **Post-v1 (hosts):** go down the tier roadmap (Windows → rest of Linux → …).
+- **Post-v1 (desktop):** Tauri/Electron packaging of the same core.
 
-## 7. Riesgos y mitigaciones
+## 7. Risks and mitigations
 
-| Riesgo | Impacto | Mitigación |
-|--------|---------|------------|
-| Salida de comandos varía por SO/locale/versión | Parseo frágil | Adaptadores + salidas máquina + fallback a crudo (Art. 6/7) |
-| Latencia por round trips | UX lenta | Caché, batching, UI optimista (Art. 8) |
-| Backend = gateway SSH expuesto | Riesgo de seguridad alto | Auth, aislamiento, host keys, auditoría (§5) |
-| Sobre-alcance de apps | v1 nunca termina | Cerrar subconjunto mínimo de apps por hito |
-| Acoplar lógica a la UI | Rompe desktop futuro | Núcleo agnóstico estricto (Art. 5) |
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Command output varies by OS/locale/version | Fragile parsing | Adapters + machine output + raw fallback (Art. 6/7) |
+| Latency from round trips | Slow UX | Cache, batching, optimistic UI (Art. 8) |
+| Backend = exposed SSH gateway | High security risk | Auth, isolation, host keys, auditing (§5) |
+| App over-scope | v1 never ships | Lock a minimal app subset per milestone |
+| Coupling logic to the UI | Breaks future desktop | Strict agnostic core (Art. 5) |
 
-## 8. Decisiones
+## 8. Decisions
 
-**Cerradas (2026-06-25):**
-- **Web-first** + núcleo agnóstico como arquitectura de v1.
-- **Licencia AGPL-3.0-or-later** (ver `constitution.md` y `LICENSE`).
-- **Usuario #1 = accesibilidad**; **v1 enfocada** (app set en §6).
+**Closed (2026-06-25):**
+- **Web-first** + agnostic core as the v1 architecture.
+- **License AGPL-3.0-or-later** (see `constitution.md` and `LICENSE`).
+- **User #1 = accessibility**; **focused v1** (app set in §6).
 
-**Abiertas:**
-1. Stack: confirmar TS/Node/`ssh2`/React; framework de UI/estilos.
-2. Almacén de credenciales.
-3. Tauri vs Electron para el empaquetado desktop (post-v1).
+**Open:**
+1. Stack: confirm TS/Node/`ssh2`/React; UI/styling framework.
+2. Credential store.
+3. Tauri vs Electron for desktop packaging (post-v1).

@@ -1,36 +1,35 @@
-# Glosario de DeskSSH
+# DeskSSH Glossary
 
-Vocabulario del dominio. DeskSSH traduce constantemente entre dos mundos
-—la **metáfora de escritorio** y los **comandos del sistema**— así que un
-lenguaje compartido evita confusiones.
+Domain vocabulary. DeskSSH constantly translates between two worlds —the **desktop
+metaphor** and **system commands**— so a shared language avoids confusion.
 
-| Término | Definición |
-|--------|------------|
-| **Host** | Un servidor remoto al que se conecta por SSH. Tiene credenciales, dirección, puerto y un adaptador de SO asociado. |
-| **Sesión** | Una conexión SSH viva con un host, capaz de ejecutar comandos y abrir canales (PTY, SFTP). |
-| **Núcleo (core)** | Lógica agnóstica del frontend: gestión de sesiones, adaptadores, parsers y definición de apps. |
-| **Adaptador de SO** | Módulo que conoce las particularidades de una familia de sistemas (comandos, flags, rutas) y expone una interfaz uniforme. |
-| **App de escritorio** | Una "aplicación" dentro de DeskSSH (gestor de archivos, terminal, monitor…). Cada una mapea acciones de GUI a conjuntos de comandos. |
-| **Acción** | Interacción del usuario (doble clic, arrastrar, botón) que se resuelve en uno o más comandos remotos. |
-| **VFS (Virtual File System)** | Vista del sistema de archivos remoto que el cliente construye y cachea a partir de `ls`/`stat`/SFTP. |
-| **Shell de escritorio** | La capa de UI que dibuja ventanas, taskbar, lanzador e iconos. La "cara" de DeskSSH. |
-| **Transparencia de comandos** | Capacidad de inspeccionar el comando exacto detrás de cada acción (ver Constitución, Art. 3). |
-| **Round trip** | Un ciclo petición→ejecución→respuesta contra el host remoto. Unidad de coste de latencia. |
-| **Degradación elegante** | Ofrecer menos funcionalidad (no fallar) cuando el remoto no soporta algo. |
-| **Backend / gateway** | En el modelo web, el servicio que mantiene las sesiones SSH y sirve la UI. El navegador no abre SSH directamente. |
+| Term | Definition |
+|------|------------|
+| **Host** | A remote server connected to via SSH. Has credentials, address, port and an associated OS adapter. |
+| **Session** | A live SSH connection to a host, able to run commands and open channels (PTY, SFTP). |
+| **Core** | Frontend-agnostic logic: session management, adapters, parsers and app definitions. |
+| **OS adapter** | A module that knows the specifics of a system family (commands, flags, paths) and exposes a uniform interface. |
+| **Desktop app** | An "application" inside DeskSSH (file manager, terminal, monitor…). Each maps GUI actions to command sets. |
+| **Action** | A user interaction (double click, drag, button) that resolves into one or more remote commands. |
+| **VFS (Virtual File System)** | The view of the remote filesystem that the client builds and caches from `ls`/`stat`/SFTP. |
+| **Desktop shell** | The UI layer that draws windows, taskbar, launcher and icons. The "face" of DeskSSH. |
+| **Command transparency** | The ability to inspect the exact command behind each action (see Constitution, Art. 3). |
+| **Round trip** | A request→execute→response cycle against the remote host. The unit of latency cost. |
+| **Graceful degradation** | Offering less functionality (not failing) when the remote doesn't support something. |
+| **Backend / gateway** | In the web model, the service that keeps SSH sessions alive and serves the UI. The browser never opens SSH directly. |
 
-## Mapa metáfora ↔ comando (ejemplos ilustrativos, no exhaustivo)
+## Metaphor ↔ command map (illustrative, not exhaustive)
 
-| Acción de escritorio | Comando(s) equivalente(s) (orientativo) |
-|----------------------|------------------------------------------|
-| Abrir carpeta | `ls`, `stat -c` / SFTP `readdir` |
-| Propiedades de archivo | `stat`, `file`, `getfacl` |
-| Copiar / mover / borrar | `cp` / `mv` / `rm` (con confirmación) |
-| Crear carpeta | `mkdir` |
-| Abrir terminal | canal PTY sobre SSH |
-| Administrador de tareas | `ps -eo`, `top -b -n1`, `kill` |
-| Monitor del sistema | `free`, `df`, `uptime`, `cat /proc/...` |
-| Gestor de servicios | `systemctl list-units`, `systemctl start/stop/status` |
-| Visor de logs | `journalctl`, `tail -f` sobre canal |
-| Editor de texto | leer vía SFTP/`cat`, guardar vía SFTP |
-| Conexiones de red | `ss -tulpn`, `ip a` |
+| Desktop action | Equivalent command(s) (indicative) |
+|----------------|-------------------------------------|
+| Open folder | `ls`, `stat -c` / SFTP `readdir` |
+| File properties | `stat`, `file`, `getfacl` |
+| Copy / move / delete | `cp` / `mv` / `rm` (with confirmation) |
+| Create folder | `mkdir` |
+| Open terminal | PTY channel over SSH |
+| Task manager | `ps -eo`, `top -b -n1`, `kill` |
+| System monitor | `free`, `df`, `uptime`, `cat /proc/...` |
+| Service manager | `systemctl list-units`, `systemctl start/stop/status` |
+| Log viewer | `journalctl`, `tail -f` over a channel |
+| Text editor | read via SFTP/`cat`, save via SFTP |
+| Network connections | `ss -tulpn`, `ip a` |

@@ -1,194 +1,190 @@
-# Especificación funcional — 001 Core (experiencia base)
+# Functional specification — 001 Core (base experience)
 
-Define **qué** hace DeskSSH y **por qué**, sin entrar en cómo se implementa
-(eso está en `plan.md`). Las decisiones abiertas se marcan `[NECESITA DECISIÓN]`
-y se listan al final.
+Defines **what** DeskSSH does and **why**, without going into how it is implemented
+(that's in `plan.md`). Open decisions are marked `[NEEDS DECISION]` and listed at
+the end.
 
-Relacionado: [`../constitution.md`](../constitution.md) · [`../glossary.md`](../glossary.md)
+Related: [`../constitution.md`](../constitution.md) · [`../glossary.md`](../glossary.md)
 
 ---
 
-## 1. Problema
+## 1. Problem
 
-Administrar un servidor Linux sin entorno gráfico obliga a conocer la línea de
-comandos. Las alternativas gráficas existentes:
+Administering a Linux server with no graphical environment forces you to know the
+command line. Existing graphical alternatives:
 
-- **Escritorio remoto (VNC/RDP/X)**: exige un entorno gráfico instalado y consume
-  ancho de banda transmitiendo píxeles; inviable en servidores headless.
-- **Paneles web (Cockpit, Webmin)**: requieren instalar y mantener un agente en el
-  servidor, y ofrecen una UX de "formulario web", no de escritorio.
+- **Remote desktop (VNC/RDP/X)**: requires an installed graphical environment and
+  consumes bandwidth transmitting pixels; unviable on headless servers.
+- **Web panels (Cockpit, Webmin)**: require installing and maintaining an agent on
+  the server, and offer a "web form" UX, not a desktop one.
 
-Falta una herramienta que dé una **experiencia de escritorio real** sobre
-**cualquier servidor con solo SSH**, sin instalar nada y sin transmitir píxeles.
+There is no tool that gives a **real desktop experience** over **any server with
+just SSH**, installing nothing and transmitting no pixels.
 
-## 2. Propuesta de valor
+## 2. Value proposition
 
-DeskSSH presenta un **escritorio familiar** (ventanas, gestor de archivos,
-terminal, monitor, editor, servicios) cuyo backend es **SSH puro**: cada
-interacción se traduce en comandos ejecutados en el host. Sin agentes, sin
-streaming, y con **transparencia**: siempre puedes ver el comando detrás del clic.
+DeskSSH presents a **familiar desktop** (windows, file manager, terminal, monitor,
+editor, services) whose backend is **plain SSH**: every interaction is translated
+into commands executed on the host. No agents, no streaming, and with
+**transparency**: you can always see the command behind the click.
 
-## 3. Objetivos (v1)
+## 3. Goals (v1)
 
-- O1. Conectar a hosts remotos por SSH (clave o contraseña) y gestionarlos.
-- O2. Ofrecer un shell de escritorio con ventanas y multitarea básica.
-- O3. Incluir un conjunto inicial de apps útiles (ver §6).
-- O4. Funcionar **agentless** sobre servidores Linux comunes.
-- O5. Hacer visible el comando equivalente de cada acción (transparencia).
+- G1. Connect to remote hosts over SSH (key or password) and manage them.
+- G2. Offer a desktop shell with windows and basic multitasking.
+- G3. Include an initial set of useful apps (see §6).
+- G4. Work **agentless** on common Linux servers.
+- G5. Make the equivalent command of each action visible (transparency).
 
-## 4. No-objetivos (v1)
+## 4. Non-goals (v1)
 
-- Streaming de escritorio o aplicaciones gráficas remotas (prohibido por la
-  constitución).
-- Soporte como host remoto de Windows, macOS, *BSD y otras distros Linux: **fuera
-  de v1**, planificado en el roadmap de hosts (Tier 2+, ver `plan.md §4`).
-- Multiusuario/colaboración en tiempo real sobre la misma sesión.
-- Orquestación de flotas (gestión masiva de muchos servidores a la vez).
-- Tienda de apps / plugins de terceros (la arquitectura lo permitirá, pero no es v1).
+- Desktop streaming or remote graphical applications (forbidden by the
+  constitution).
+- Windows, macOS, *BSD and other Linux distros as remote host: **out of v1**,
+  planned in the host roadmap (Tier 2+, see `plan.md §4`).
+- Multi-user / real-time collaboration over the same session.
+- Fleet orchestration (managing many servers at once).
+- Third-party app/plugin store (the architecture will allow it, but not in v1).
 
-## 5. Personas y casos de uso
+## 5. Personas and use cases
 
-> **Persona principal de la v1: "Usuario con poca soltura en CLI".** La v1
-> prioriza **accesibilidad**: defaults seguros y guiados, lenguaje llano, la
-> terminal como último recurso y la transparencia (Art. 3) presentada de forma
-> *educativa y a demanda*, no protagonista. El resto de personas se atiende, pero
-> no marca el rumbo del diseño.
+> **v1 primary persona: "User with low CLI fluency".** v1 prioritizes
+> **accessibility**: safe, guided defaults, plain language, the terminal as a last
+> resort and transparency (Art. 3) presented in an *educational, on-demand* way,
+> not as the protagonist. Other personas are served, but they do not steer the
+> design.
 
-- **⭐ Usuario con un VPS pero poca soltura en CLI (PRINCIPAL)** — administra su
-  servidor con una GUI sin tener que dominar la terminal. *"Quiero gestionar mi
-  servidor sin que la consola me intimide."*
-- **Sysadmin / DevOps** — administra VPS y servidores; quiere rapidez y ver qué se
-  ejecuta. *"Reviso servicios y logs sin memorizar flags."*
-- **Desarrollador** — despliega en un VPS; quiere gestionar archivos y procesos
-  con comodidad. *"Subo un build y reinicio el servicio sin abrir 3 terminales."*
-- **Persona que aprende Linux** — la transparencia de comandos le enseña.
-  *"Veo qué comando hace cada cosa que pulso."*
+- **⭐ User with a VPS but low CLI fluency (PRIMARY)** — manages their server with a
+  GUI without having to master the terminal. *"I want to manage my server without
+  the console intimidating me."*
+- **Sysadmin / DevOps** — manages VPSs and servers; wants speed and to see what
+  runs. *"I review services and logs without memorizing flags."*
+- **Developer** — deploys to a VPS; wants to manage files and processes
+  comfortably. *"I upload a build and restart the service without opening 3
+  terminals."*
+- **Person learning Linux** — command transparency teaches them. *"I see what
+  command each thing I click does."*
 
-### Recorrido principal
+### Main journey
 
-1. El usuario añade un host (dirección, usuario, método de autenticación).
-2. Se conecta; DeskSSH detecta el SO y abre el **escritorio**.
-3. Abre el **gestor de archivos**, navega, copia un archivo (ve la confirmación y,
-   opcionalmente, el comando).
-4. Abre el **monitor del sistema** y comprueba CPU/memoria/disco de un vistazo.
-   (La gestión de servicios/procesos llega *post-v1*.)
-5. Abre una **terminal** real para algo puntual. Cierra la sesión.
+1. The user adds a host (address, user, authentication method).
+2. They connect; DeskSSH detects the OS and opens the **desktop**.
+3. They open the **file manager**, browse, copy a file (seeing the confirmation
+   and, optionally, the command).
+4. They open the **system monitor** and check CPU/memory/disk at a glance.
+   (Service/process management arrives *post-v1*.)
+5. They open a real **terminal** for something specific. They close the session.
 
-## 6. Requisitos funcionales
+## 6. Functional requirements
 
-> **Alcance de apps de la v1 (corte enfocado):** Conexión/hosts, Shell de
-> escritorio, Gestor de archivos, Editor de texto, Terminal y **Monitor del
-> sistema**. Las apps marcadas *(post-v1)* abajo —Procesos, Servicios, Visor de
-> logs, Paquetes— se especifican aquí pero se implementan después de la v1
-> (ver `plan.md §6`).
+> **v1 app scope (focused cut):** Connection/hosts, Desktop shell, File manager,
+> Text editor, Terminal and **System monitor**. The apps marked *(post-v1)* below
+> —Processes, Services, Log viewer, Packages— are specified here but implemented
+> after v1 (see `plan.md §6`).
 
-### Conexión y hosts
-- **FR-001** Añadir, editar y eliminar hosts (nombre, dirección, puerto, usuario).
-- **FR-002** Autenticación mediante: (a) **clave privada** SSH —el usuario aporta
-  el archivo de clave (formatos **PEM / OpenSSH / PKCS#8**), con **passphrase
-  opcional**—, y (b) **contraseña**. (La protección/almacenamiento de la clave se
-  rige por FR-005 y el Art. 4 de la constitución.) `[NECESITA DECISIÓN]` ¿soporte
-  de `ssh-agent` en v1?
-- **FR-003** Conectar/desconectar; mostrar estado de la sesión (conectando, viva,
-  caída, error).
-- **FR-004** Detectar la familia de SO del host para elegir el adaptador (Art. 6).
-- **FR-005** Nunca persistir secretos en claro (Art. 4). `[NECESITA DECISIÓN]`
-  almacén de credenciales (keychain del SO, cifrado local, no persistir).
+### Connection and hosts
+- **FR-001** Add, edit and remove hosts (name, address, port, user).
+- **FR-002** Authentication via: (a) **SSH private key** —the user provides the key
+  file (**PEM / OpenSSH / PKCS#8** formats), with **optional passphrase**—, and
+  (b) **password**. (Key protection/storage is governed by FR-005 and constitution
+  Art. 4.) `[NEEDS DECISION]` `ssh-agent` support in v1?
+- **FR-003** Connect/disconnect; show session state (connecting, alive, dropped,
+  error).
+- **FR-004** Detect the host's OS family to choose the adapter (Art. 6).
+- **FR-005** Never persist secrets in plain text (Art. 4). `[NEEDS DECISION]`
+  credential store (OS keychain, local encryption, no persistence).
 
-### Shell de escritorio
-- **FR-010** Mostrar un escritorio con ventanas movibles/redimensionables y una
-  barra de tareas.
-- **FR-011** Lanzador de apps ("menú de inicio") para abrir las apps disponibles.
-- **FR-012** Soportar varias ventanas/apps abiertas simultáneamente sobre una
-  misma sesión.
-- **FR-013** Indicador visible para inspeccionar el comando de la última acción
-  (transparencia, Art. 3).
+### Desktop shell
+- **FR-010** Show a desktop with movable/resizable windows and a taskbar.
+- **FR-011** App launcher ("start menu") to open the available apps.
+- **FR-012** Support multiple windows/apps open simultaneously over one session.
+- **FR-013** Visible indicator to inspect the command of the last action
+  (transparency, Art. 3).
 
-### App: Gestor de archivos
-- **FR-020** Navegar el árbol de directorios remoto con iconos y detalles.
-- **FR-021** Crear carpeta, renombrar, copiar, mover y borrar (borrar/sobrescribir
-  exigen confirmación, Art. 4).
-- **FR-022** Ver propiedades (tamaño, permisos, propietario, fechas).
-- **FR-023** Subir y descargar archivos entre el equipo del usuario y el host.
-- **FR-024** `[NECESITA DECISIÓN]` ¿drag & drop en v1 o en una iteración posterior?
-- **FR-025** Al abrir un archivo, el usuario elige entre dos **lugares de
-  ejecución**:
-  - **(A) En DeskSSH** — *Abrir* (app DeskSSH por defecto para ese tipo) o *Abrir
-    con* (elegir entre las apps/visores de DeskSSH). El archivo se lee vía
-    `readFile` y se renderiza en la GUI; **no se ejecuta nada en el remoto**
-    (Art. 10). Requiere que exista un *handler* DeskSSH para ese tipo; si no, se
-    ofrece la opción (B).
-  - **(B) En el cliente** — *Abrir en el cliente* (se descarga por SFTP, en
-    streaming, a la **máquina local del usuario** y se abre con el programa por
-    defecto de su SO) o *Descargar* (solo guardar en local).
+### App: File manager
+- **FR-020** Browse the remote directory tree with icons and details.
+- **FR-021** Create folder, rename, copy, move and delete (delete/overwrite require
+  confirmation, Art. 4).
+- **FR-022** View properties (size, permissions, owner, dates).
+- **FR-023** Upload and download files between the user's machine and the host.
+- **FR-024** `[NEEDS DECISION]` drag & drop in v1 or a later iteration?
+- **FR-025** When opening a file, the user chooses between two **execution
+  locations**:
+  - **(A) In DeskSSH** — *Open* (default DeskSSH app for that type) or *Open with*
+    (choose among DeskSSH apps/viewers). The file is read via `readFile` and
+    rendered in the GUI; **nothing runs on the remote** (Art. 10). Requires a
+    DeskSSH *handler* for that type; if none, option (B) is offered.
+  - **(B) On the client** — *Open on the client* (downloaded over SFTP, streaming,
+    to the **user's local machine** and opened with their OS's default program) or
+    *Download* (just save locally).
 
-  Nota de vocabulario: **"el cliente" = la máquina local del usuario** (su
-  navegador/SO en el modelo web), no el servidor DeskSSH.
-  `[NECESITA DECISIÓN]` En el modo **web**, un navegador no puede forzar la
-  apertura con el programa por defecto del SO: ¿"Abrir en el cliente" se resuelve
-  como **descarga simple**, como **apertura inline** según el tipo, o ambas? (En el
-  build de escritorio sí es apertura plena con el SO.)
+  Vocabulary note: **"the client" = the user's local machine** (their browser/OS in
+  the web model), not the DeskSSH server.
+  `[NEEDS DECISION]` In **web** mode, a browser cannot force opening with the OS's
+  default program: does "Open on the client" resolve as a **plain download**, as
+  **inline opening** depending on type, or both? (In the desktop build it is full
+  opening with the OS.)
 
 ### App: Terminal
-- **FR-030** Terminal interactiva real (PTY sobre SSH) con redimensionado.
-- **FR-031** Reusar la sesión SSH del host ya conectado.
+- **FR-030** Real interactive terminal (PTY over SSH) with resizing.
+- **FR-031** Reuse the already-connected host's SSH session.
 
-### App: Procesos / Administrador de tareas *(post-v1)*
-- **FR-040** Listar procesos (uso de CPU/mem, PID, usuario, comando).
-- **FR-041** Terminar un proceso (confirmación obligatoria).
+### App: Processes / Task manager *(post-v1)*
+- **FR-040** List processes (CPU/mem usage, PID, user, command).
+- **FR-041** Terminate a process (mandatory confirmation).
 
-### App: Monitor del sistema
-- **FR-050** Mostrar CPU, memoria, disco y uptime, con refresco periódico.
+### App: System monitor
+- **FR-050** Show CPU, memory, disk and uptime, with periodic refresh.
 
-### App: Gestor de servicios *(post-v1)*
-- **FR-060** Listar servicios (systemd primero) y su estado.
-- **FR-061** Iniciar, parar y reiniciar servicios (confirmación obligatoria).
-- **FR-062** Ver el estado/log reciente de un servicio.
+### App: Service manager *(post-v1)*
+- **FR-060** List services (systemd first) and their state.
+- **FR-061** Start, stop and restart services (mandatory confirmation).
+- **FR-062** View a service's recent state/log.
 
-### App: Editor de texto
-- **FR-070** Abrir, editar y guardar archivos de texto remotos.
-- **FR-071** Avisar de ediciones sin guardar al cerrar.
+### App: Text editor
+- **FR-070** Open, edit and save remote text files.
+- **FR-071** Warn about unsaved edits on close.
 
-### App: Visor de logs *(post-v1)*
-- **FR-080** Ver y seguir (`tail -f`/`journalctl -f`) logs en streaming.
+### App: Log viewer *(post-v1)*
+- **FR-080** View and follow (`tail -f`/`journalctl -f`) logs in streaming.
 
-### Transversales
-- **FR-090** Toda acción destructiva pide confirmación explícita (Art. 4).
-- **FR-091** Si el parseo de una salida falla, mostrar la salida cruda sin romper
-  la app (Art. 7).
-- **FR-092** Mostrar latencia/estado de las operaciones de red en curso (Art. 8).
+### Cross-cutting
+- **FR-090** Every destructive action asks for explicit confirmation (Art. 4).
+- **FR-091** If parsing output fails, show the raw output without breaking the app
+  (Art. 7).
+- **FR-092** Show latency/state of in-flight network operations (Art. 8).
 
-## 7. Requisitos no funcionales
+## 7. Non-functional requirements
 
-- **NFR-Seguridad** — Cumplir el Artículo 4 de la constitución íntegramente.
-- **NFR-Portabilidad** — v1 cubre **Debian/Ubuntu/Mint** como host remoto; el
-  soporte de más SO se incorpora por adaptadores (Art. 6) según el **roadmap de
-  hosts** (`plan.md §4`).
-- **NFR-Rendimiento** — Operaciones comunes (listar carpeta, refrescar monitor)
-  perceptiblemente fluidas en latencias de red típicas; minimizar round trips.
-- **NFR-Resiliencia** — Ningún fallo de parseo/red tira la aplicación (Art. 7).
-- **NFR-Accesibilidad / i18n** — UI navegable por teclado; textos preparados para
-  traducción (al menos ES/EN). `[NECESITA DECISIÓN]` alcance de i18n en v1.
-- **NFR-Apertura** — Stack y dependencias 100% open source (Art. 9).
+- **NFR-Security** — Fully comply with Article 4 of the constitution.
+- **NFR-Portability** — v1 covers **Debian/Ubuntu/Mint** as remote host; support for
+  more OSes is added via adapters (Art. 6) following the **host roadmap**
+  (`plan.md §4`).
+- **NFR-Performance** — Common operations (list a folder, refresh the monitor)
+  perceptibly fluid at typical network latencies; minimize round trips.
+- **NFR-Resilience** — No parsing/network failure crashes the app (Art. 7).
+- **NFR-Accessibility / i18n** — Keyboard-navigable UI; text ready for translation
+  (at least ES/EN). `[NEEDS DECISION]` i18n scope in v1.
+- **NFR-Openness** — Stack and dependencies 100% open source (Art. 9).
 
-## 8. Criterios de aceptación (v1, alto nivel)
+## 8. Acceptance criteria (v1, high level)
 
-- Un usuario puede añadir un host Linux real, conectarse y abrir el escritorio.
-- Puede navegar archivos, abrir una terminal funcional, ver procesos/servicios y
-  editar un archivo, todo agentless.
-- Cada acción destructiva pide confirmación; ningún secreto se guarda en claro.
-- Un fallo de parseo en un host "raro" muestra salida cruda sin crashear.
+- A user can add a real Linux host, connect and open the desktop.
+- They can browse files, open a working terminal, view processes/services and edit a
+  file, all agentless.
+- Every destructive action asks for confirmation; no secret is stored in plain text.
+- A parsing failure on an "odd" host shows raw output without crashing.
 
-## 9. Decisiones abiertas `[NECESITA DECISIÓN]`
+## 9. Open decisions `[NEEDS DECISION]`
 
-1. ~~Licencia open source~~ → **Resuelto (2026-06-25): AGPL-3.0-or-later** (ver
-   `constitution.md` y `LICENSE`).
-2. ~~Confirmar web-first~~ → **Resuelto (2026-06-25): web-first** con núcleo
-   agnóstico; desktop como empaquetado posterior (ver `plan.md` §1).
-3. Soporte de `ssh-agent`/passphrase en v1 (FR-002).
-4. Almacén de credenciales: keychain del SO, cifrado local o no persistir (FR-005).
-5. Drag & drop en el gestor de archivos en v1 o después (FR-024).
-6. Alcance de i18n en v1 (NFR-Accesibilidad/i18n).
-7. ~~Conjunto de apps de la v1~~ → **Resuelto (2026-06-25):** corte enfocado =
-   Conexión/hosts, Shell, Gestor de archivos, Editor, Terminal y Monitor del
-   sistema; resto *(post-v1)* (ver §6 y `plan.md §6`).
+1. ~~Open source license~~ → **Resolved (2026-06-25): AGPL-3.0-or-later** (see
+   `constitution.md` and `LICENSE`).
+2. ~~Confirm web-first~~ → **Resolved (2026-06-25): web-first** with an agnostic
+   core; desktop as later packaging (see `plan.md §1`).
+3. `ssh-agent`/passphrase support in v1 (FR-002).
+4. Credential store: OS keychain, local encryption or no persistence (FR-005).
+5. Drag & drop in the file manager in v1 or later (FR-024).
+6. i18n scope in v1 (NFR-Accessibility/i18n).
+7. ~~v1 app set~~ → **Resolved (2026-06-25):** focused cut = Connection/hosts,
+   Shell, File manager, Editor, Terminal and System monitor; the rest *(post-v1)*
+   (see §6 and `plan.md §6`).
