@@ -29,6 +29,17 @@ export const en = {
   'connected.transparency': 'Commands run (transparency)',
   'connected.disconnect': 'Disconnect',
   'connected.empty': 'Empty directory',
+  'desktop.start': 'Apps',
+  'desktop.disconnect': 'Disconnect',
+  'desktop.comingSoon': 'Coming soon',
+  'apps.files': 'Files',
+  'apps.system': 'System info',
+  'apps.terminal': 'Terminal',
+  'apps.monitor': 'System monitor',
+  'system.os': 'Operating system',
+  'system.host': 'Host',
+  'system.home': 'Home',
+  'system.transparency': 'Commands run (transparency)',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -3,7 +3,7 @@ import { detectLocale, makeTranslator } from '@/i18n';
 import { connect, disconnect, type ConnectInput, type SessionInfo } from '@/api/gateway';
 import { LoginForm } from '@/features/login/LoginForm';
 import { HostKeyDialog, type HostKeyPrompt } from '@/features/login/HostKeyDialog';
-import { ConnectedView } from '@/features/connected/ConnectedView';
+import { Desktop } from '@/features/desktop/Desktop';
 
 export function App() {
   const t = useMemo(() => makeTranslator(detectLocale()), []);
@@ -48,14 +48,14 @@ export function App() {
     setSession(null);
   }
 
+  if (session) {
+    return <Desktop t={t} session={session} onDisconnect={handleDisconnect} />;
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-10">
       <header className="text-sm font-bold tracking-wide text-muted-foreground">DeskSSH</header>
-      {session ? (
-        <ConnectedView t={t} session={session} onDisconnect={handleDisconnect} />
-      ) : (
-        <LoginForm t={t} busy={busy} error={error} onSubmit={attempt} />
-      )}
+      <LoginForm t={t} busy={busy} error={error} onSubmit={attempt} />
       <HostKeyDialog t={t} prompt={hostKey} onConfirm={confirmHostKey} onCancel={cancelHostKey} />
     </main>
   );
