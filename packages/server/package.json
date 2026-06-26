@@ -1,0 +1,19 @@
+{
+  "name": "@deskssh/server",
+  "version": "0.0.1",
+  "description": "DeskSSH web gateway: keeps SSH sessions alive and exposes the API",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@deskssh/core": "workspace:*"
+  }
+}

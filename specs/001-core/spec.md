@@ -40,7 +40,7 @@ into commands executed on the host. No agents, no streaming, and with
 
 - Desktop streaming or remote graphical applications (forbidden by the
   constitution).
-- Windows, macOS, *BSD and other Linux distros as remote host: **out of v1**,
+- Windows, macOS, \*BSD and other Linux distros as remote host: **out of v1**,
   planned in the host roadmap (Tier 2+, see `plan.md §4`).
 - Multi-user / real-time collaboration over the same session.
 - Fleet orchestration (managing many servers at once).
@@ -50,20 +50,20 @@ into commands executed on the host. No agents, no streaming, and with
 
 > **v1 primary persona: "User with low CLI fluency".** v1 prioritizes
 > **accessibility**: safe, guided defaults, plain language, the terminal as a last
-> resort and transparency (Art. 3) presented in an *educational, on-demand* way,
+> resort and transparency (Art. 3) presented in an _educational, on-demand_ way,
 > not as the protagonist. Other personas are served, but they do not steer the
 > design.
 
 - **⭐ User with a VPS but low CLI fluency (PRIMARY)** — manages their server with a
-  GUI without having to master the terminal. *"I want to manage my server without
-  the console intimidating me."*
+  GUI without having to master the terminal. _"I want to manage my server without
+  the console intimidating me."_
 - **Sysadmin / DevOps** — manages VPSs and servers; wants speed and to see what
-  runs. *"I review services and logs without memorizing flags."*
+  runs. _"I review services and logs without memorizing flags."_
 - **Developer** — deploys to a VPS; wants to manage files and processes
-  comfortably. *"I upload a build and restart the service without opening 3
-  terminals."*
-- **Person learning Linux** — command transparency teaches them. *"I see what
-  command each thing I click does."*
+  comfortably. _"I upload a build and restart the service without opening 3
+  terminals."_
+- **Person learning Linux** — command transparency teaches them. _"I see what
+  command each thing I click does."_
 
 ### Main journey
 
@@ -72,17 +72,18 @@ into commands executed on the host. No agents, no streaming, and with
 3. They open the **file manager**, browse, copy a file (seeing the confirmation
    and, optionally, the command).
 4. They open the **system monitor** and check CPU/memory/disk at a glance.
-   (Service/process management arrives *post-v1*.)
+   (Service/process management arrives _post-v1_.)
 5. They open a real **terminal** for something specific. They close the session.
 
 ## 6. Functional requirements
 
 > **v1 app scope (focused cut):** Connection/hosts, Desktop shell, File manager,
-> Text editor, Terminal and **System monitor**. The apps marked *(post-v1)* below
+> Text editor, Terminal and **System monitor**. The apps marked _(post-v1)_ below
 > —Processes, Services, Log viewer, Packages— are specified here but implemented
 > after v1 (see `plan.md §6`).
 
 ### Connection and hosts
+
 - **FR-001** Add, edit and remove hosts (name, address, port, user).
 - **FR-002** Authentication via: (a) **SSH private key** —the user provides the key
   file (**PEM / OpenSSH / PKCS#8** formats), with **optional passphrase**—, and
@@ -96,6 +97,7 @@ into commands executed on the host. No agents, no streaming, and with
   encrypted store (OS keychain / local encryption) may come post-v1.
 
 ### Desktop shell
+
 - **FR-010** Show a desktop with movable/resizable windows and a taskbar.
 - **FR-011** App launcher ("start menu") to open the available apps.
 - **FR-012** Support multiple windows/apps open simultaneously over one session.
@@ -103,6 +105,7 @@ into commands executed on the host. No agents, no streaming, and with
   (transparency, Art. 3).
 
 ### App: File manager
+
 - **FR-020** Browse the remote directory tree with icons and details.
 - **FR-021** Create folder, rename, copy, move and delete (delete/overwrite require
   confirmation, Art. 4).
@@ -112,13 +115,13 @@ into commands executed on the host. No agents, no streaming, and with
   cut).
 - **FR-025** When opening a file, the user chooses between two **execution
   locations**:
-  - **(A) In DeskSSH** — *Open* (default DeskSSH app for that type) or *Open with*
+  - **(A) In DeskSSH** — _Open_ (default DeskSSH app for that type) or _Open with_
     (choose among DeskSSH apps/viewers). The file is read via `readFile` and
     rendered in the GUI; **nothing runs on the remote** (Art. 10). Requires a
-    DeskSSH *handler* for that type; if none, option (B) is offered.
-  - **(B) On the client** — *Open on the client* (downloaded over SFTP, streaming,
+    DeskSSH _handler_ for that type; if none, option (B) is offered.
+  - **(B) On the client** — _Open on the client_ (downloaded over SFTP, streaming,
     to the **user's local machine** and opened with their OS's default program) or
-    *Download* (just save locally).
+    _Download_ (just save locally).
 
   Vocabulary note: **"the client" = the user's local machine** (their browser/OS in
   the web model), not the DeskSSH server.
@@ -128,29 +131,36 @@ into commands executed on the host. No agents, no streaming, and with
   or both?
 
 ### App: Terminal
+
 - **FR-030** Real interactive terminal (PTY over SSH) with resizing.
 - **FR-031** Reuse the already-connected host's SSH session.
 
-### App: Processes / Task manager *(post-v1)*
+### App: Processes / Task manager _(post-v1)_
+
 - **FR-040** List processes (CPU/mem usage, PID, user, command).
 - **FR-041** Terminate a process (mandatory confirmation).
 
 ### App: System monitor
+
 - **FR-050** Show CPU, memory, disk and uptime, with periodic refresh.
 
-### App: Service manager *(post-v1)*
+### App: Service manager _(post-v1)_
+
 - **FR-060** List services (systemd first) and their state.
 - **FR-061** Start, stop and restart services (mandatory confirmation).
 - **FR-062** View a service's recent state/log.
 
 ### App: Text editor
+
 - **FR-070** Open, edit and save remote text files.
 - **FR-071** Warn about unsaved edits on close.
 
-### App: Log viewer *(post-v1)*
+### App: Log viewer _(post-v1)_
+
 - **FR-080** View and follow (`tail -f`/`journalctl -f`) logs in streaming.
 
 ### Cross-cutting
+
 - **FR-090** Every destructive action asks for explicit confirmation (Art. 4).
 - **FR-091** If parsing output fails, show the raw output without breaking the app
   (Art. 7).
@@ -192,5 +202,5 @@ into commands executed on the host. No agents, no streaming, and with
 6. ~~i18n scope~~ → **Resolved (2026-06-26): i18n-ready from day 1, v1 ships EN +
    ES** (NFR-Accessibility/i18n).
 7. ~~v1 app set~~ → **Resolved (2026-06-25):** focused cut = Connection/hosts,
-   Shell, File manager, Editor, Terminal and System monitor; the rest *(post-v1)*
+   Shell, File manager, Editor, Terminal and System monitor; the rest _(post-v1)_
    (see §6 and `plan.md §6`).

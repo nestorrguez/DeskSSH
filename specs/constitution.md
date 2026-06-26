@@ -101,7 +101,7 @@ structured output, the capability contract could not normalize across OSes.
 
 ## Amendments
 
-- *(none yet)*
+- _(none yet)_
 
 ## Closed decisions
 

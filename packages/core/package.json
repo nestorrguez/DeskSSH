@@ -1,0 +1,22 @@
+{
+  "name": "@deskssh/core",
+  "version": "0.0.1",
+  "description": "DeskSSH frontend-agnostic core: SSH sessions, OS adapters, capability contract",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  }
+}

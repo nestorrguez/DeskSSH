@@ -40,14 +40,14 @@ Result: **a single logic base and one web UI**, distributed as **hosted** or
 ## 2. Layered architecture
 
 1. **`core`** (agnostic, no UI nor presentation network I/O):
-   - *Session manager*: abstraction over an SSH connection (run command, open PTY,
+   - _Session manager_: abstraction over an SSH connection (run command, open PTY,
      open SFTP).
-   - *OS adapters*: detection + family-specific commands (Art. 6).
-   - *Parsers*: turn command output into data structures; with fallback to raw
+   - _OS adapters_: detection + family-specific commands (Art. 6).
+   - _Parsers_: turn command output into data structures; with fallback to raw
      output (Art. 7).
-   - *Apps*: each app defines what data it requests and what commands it runs (file
+   - _Apps_: each app defines what data it requests and what commands it runs (file
      manager, processes, services, monitor, editor, logs).
-   - *Transparency*: every executed command is logged/exposed (Art. 3).
+   - _Transparency_: every executed command is logged/exposed (Art. 3).
 2. **`server`** (web gateway): keeps SSH sessions alive, authenticates the user,
    exposes an API (HTTP for one-off actions, WebSocket for PTY and streams),
    isolates sessions between users.
@@ -66,16 +66,16 @@ details (styling framework, icon set) still open — see §8. Alternatives noted
 - **Monorepo:** pnpm workspaces. Packages: `core`, `server`, `web` (and later
   `desktop`).
 - **Backend (`server`):** Node.js + the `ssh2` SSH library (mature, supports exec,
-  PTY and SFTP) + WebSocket (`ws`). *Alternative:* Rust (`russh`) for
+  PTY and SFTP) + WebSocket (`ws`). _Alternative:_ Rust (`russh`) for
   security/performance, at the cost of a higher entry barrier → discarded for v1.
 - **Frontend (`web`):** React + TypeScript. Terminal with **`xterm.js`**.
   Movable/resizable windows with a lightweight library (e.g. `react-rnd` style) or
   custom components.
-  - *Styling/components:* **Tailwind CSS + Radix UI via shadcn/ui** (all **MIT** —
+  - _Styling/components:_ **Tailwind CSS + Radix UI via shadcn/ui** (all **MIT** —
     AGPL-compatible). Tailwind for the custom desktop look; Radix primitives bring
     built-in accessibility (focus, keyboard, ARIA), key for the accessibility-first
     goal; shadcn/ui delivers them as in-repo, editable components.
-  - *Icon set:* **Lucide** (`lucide-react`, **ISC** — AGPL-compatible, no
+  - _Icon set:_ **Lucide** (`lucide-react`, **ISC** — AGPL-compatible, no
     attribution), chosen for its clean, uniform stroke style fitting the
     accessibility-first UI. (Considered: Tabler/Phosphor/Heroicons MIT, Material
     Symbols Apache-2.0, Font Awesome Free CC BY; FA Pro proprietary — avoided.)
@@ -88,7 +88,7 @@ details (styling framework, icon set) still open — see §8. Alternatives noted
 
 The core defines a **capability contract**: a closed catalog of abstract, **typed**
 operations that apps invoke **without knowing which OS they run on**. It is the
-system's "intermediate language" (an *intermediate representation*, IR). Two pieces:
+system's "intermediate language" (an _intermediate representation_, IR). Two pieces:
 
 1. **Contract (typed interface).** Each capability declares inputs and, above all, a
    **normalized output**. Examples:
@@ -106,12 +106,13 @@ system's "intermediate language" (an *intermediate representation*, IR). Two pie
    spec); the hard 20% (busybox, PowerShell) with a **code hook**.
 
 **Rules that hold it together:**
+
 - Apps **never** parse raw output; they only consume contract types. Parsing and its
-  *fallback* live in the adapter (reinforces Art. 7).
+  _fallback_ live in the adapter (reinforces Art. 7).
 - **Normalize at the source**: request structured output (`stat -c`, `ps -eo`,
   `ConvertTo-Json`…) instead of parsing human format.
 - **Capability gaps**: if a platform doesn't support an operation (e.g. `chmod` on
-  Windows), the adapter declares it *unsupported* and the UI degrades gracefully
+  Windows), the adapter declares it _unsupported_ and the UI degrades gracefully
   instead of pretending.
 
 #### Non-interactive primitives > driving TUIs
@@ -121,13 +122,15 @@ A corollary of the contract (and the answer to "how to emulate nano"): DeskSSH
 over a PTY —it would be fragile and impossible to normalize—. It uses
 **non-interactive, structured primitives** and **emulates the experience on the
 client**:
+
 - **Editor** = `readFile` + `writeFile` + a custom GUI editor (no remote nano is
   launched).
-- **Monitor** = `listProcesses`/`systemMetrics` by *polling*, not a live `top`.
+- **Monitor** = `listProcesses`/`systemMetrics` by _polling_, not a live `top`.
 - The **only** deliberate exception is the **terminal** app, which does expose the
   raw shell (there the user sees `bash`/`PowerShell`/`csh`).
 
 ### OS adapters
+
 - The contract above exposes a **uniform interface** (`listDir`, `stat`,
   `listProcesses`, `listServices`, `serviceAction`, `systemMetrics`, …).
 - Each **OS family** is an adapter implementing that contract, declaratively when
@@ -139,16 +142,16 @@ client**:
 
 #### Supported-host roadmap
 
-The tier number indicates **roadmap priority, NOT difficulty** (see the *Effort*
+The tier number indicates **roadmap priority, NOT difficulty** (see the _Effort_
 column). Windows is prioritized for popularity despite being the most costly.
 
-| Tier | Hosts | Effort | Notes |
-|------|-------|--------|-------|
-| **1** (v1) | Debian / Ubuntu / Mint | base | POSIX + GNU coreutils + systemd |
-| **2** | Windows | **high** | Non-POSIX: its own PowerShell adapter family. Still agentless (PowerShell ships with the OS). Prioritized for popularity, not ease. |
-| **3** | Rest of mainstream Linux (RHEL/Fedora/Rocky, Arch, openSUSE) | low | Same paradigm as v1 (systemd + GNU); differ mainly in the package manager |
-| **4** | macOS, FreeBSD | medium | BSD userland; init `launchd` (macOS) / `rc.d` (FreeBSD), not systemd |
-| **5** | Alpine | medium | `busybox` (trimmed flags), OpenRC, musl |
+| Tier       | Hosts                                                        | Effort   | Notes                                                                                                                               |
+| ---------- | ------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **1** (v1) | Debian / Ubuntu / Mint                                       | base     | POSIX + GNU coreutils + systemd                                                                                                     |
+| **2**      | Windows                                                      | **high** | Non-POSIX: its own PowerShell adapter family. Still agentless (PowerShell ships with the OS). Prioritized for popularity, not ease. |
+| **3**      | Rest of mainstream Linux (RHEL/Fedora/Rocky, Arch, openSUSE) | low      | Same paradigm as v1 (systemd + GNU); differ mainly in the package manager                                                           |
+| **4**      | macOS, FreeBSD                                               | medium   | BSD userland; init `launchd` (macOS) / `rc.d` (FreeBSD), not systemd                                                                |
+| **5**      | Alpine                                                       | medium   | `busybox` (trimmed flags), OpenRC, musl                                                                                             |
 
 > Constitution note: when Tier 2 arrives, the **"POSIX utilities" wording of Art. 2
 > will need generalizing** (still agentless, but no longer POSIX).
@@ -162,7 +165,7 @@ column). Windows is prioritized for popularity despite being the most costly.
   - **(A) Render in DeskSSH:** the contract's `readFile` → painted by a GUI handler.
     With a **size limit**/warning (Art. 8); no handler for the type → route B is
     offered.
-  - **(B) *Handoff* to the client:** download over **streaming SFTP** (don't load
+  - **(B) _Handoff_ to the client:** download over **streaming SFTP** (don't load
     into memory) to the user's local machine.
 - **Browser limitation (`[NEEDS DECISION]`):** DeskSSH always runs in a browser
   (hosted or self-hosted), so "Open on the client" can only **download** (and inline
@@ -170,14 +173,17 @@ column). Windows is prioritized for popularity despite being the most costly.
   download, inline-by-type, or both.
 
 ### Parsers and resilience
+
 - Each parser receives output + exit code; on unexpected format it returns a
   "degraded" result with the raw output (Art. 7), never throwing and breaking.
 
 ### Transparency
+
 - Every execution goes through a single point that logs `{command, host, timestamp,
-  exitCode}` and makes it queryable from the UI (FR-013, Art. 3).
+exitCode}` and makes it queryable from the UI (FR-013, Art. 3).
 
 ### Performance (Art. 8)
+
 - VFS listing cache with per-action invalidation.
 - Batching related commands into a single invocation when possible.
 - Optimistic UI on file operations, with reconciliation.
@@ -213,22 +219,24 @@ services, log viewer and packages are **post-v1**.
 
 ## 7. Risks and mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Command output varies by OS/locale/version | Fragile parsing | Adapters + machine output + raw fallback (Art. 6/7) |
-| Latency from round trips | Slow UX | Cache, batching, optimistic UI (Art. 8) |
-| Backend = exposed SSH gateway | High security risk | Auth, isolation, host keys, auditing (§5) |
-| App over-scope | v1 never ships | Lock a minimal app subset per milestone |
-| Coupling logic to the UI | Breaks future desktop | Strict agnostic core (Art. 5) |
+| Risk                                       | Impact                | Mitigation                                          |
+| ------------------------------------------ | --------------------- | --------------------------------------------------- |
+| Command output varies by OS/locale/version | Fragile parsing       | Adapters + machine output + raw fallback (Art. 6/7) |
+| Latency from round trips                   | Slow UX               | Cache, batching, optimistic UI (Art. 8)             |
+| Backend = exposed SSH gateway              | High security risk    | Auth, isolation, host keys, auditing (§5)           |
+| App over-scope                             | v1 never ships        | Lock a minimal app subset per milestone             |
+| Coupling logic to the UI                   | Breaks future desktop | Strict agnostic core (Art. 5)                       |
 
 ## 8. Decisions
 
 **Closed (2026-06-25):**
+
 - **Web-first** + agnostic core as the v1 architecture.
 - **License AGPL-3.0-or-later** (see `constitution.md` and `LICENSE`).
 - **User #1 = accessibility**; **focused v1** (app set in §6).
 
 **Closed (2026-06-26):**
+
 - **Core stack: TypeScript + Node + `ssh2` + React.**
 - **UI: Tailwind CSS + Radix UI (via shadcn/ui)** — all MIT.
 - **Icon set: Lucide** (ISC — AGPL-compatible, no attribution required).
