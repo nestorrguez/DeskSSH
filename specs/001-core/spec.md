@@ -87,7 +87,7 @@ into commands executed on the host. No agents, no streaming, and with
 - **FR-002** Authentication via: (a) **SSH private key** —the user provides the key
   file (**PEM / OpenSSH / PKCS#8** formats), with **optional passphrase**—, and
   (b) **password**. (Key protection/storage is governed by FR-005 and constitution
-  Art. 4.) `[NEEDS DECISION]` `ssh-agent` support in v1?
+  Art. 4.) `ssh-agent` support is **post-v1**.
 - **FR-003** Connect/disconnect; show session state (connecting, alive, dropped,
   error).
 - **FR-004** Detect the host's OS family to choose the adapter (Art. 6).
@@ -165,8 +165,8 @@ into commands executed on the host. No agents, no streaming, and with
 - **NFR-Performance** — Common operations (list a folder, refresh the monitor)
   perceptibly fluid at typical network latencies; minimize round trips.
 - **NFR-Resilience** — No parsing/network failure crashes the app (Art. 7).
-- **NFR-Accessibility / i18n** — Keyboard-navigable UI; text ready for translation
-  (at least ES/EN). `[NEEDS DECISION]` i18n scope in v1.
+- **NFR-Accessibility / i18n** — Keyboard-navigable UI; **i18n-ready from day 1**
+  (all strings externalized) and **v1 ships EN + ES**.
 - **NFR-Openness** — Stack and dependencies 100% open source (Art. 9).
 
 ## 8. Acceptance criteria (v1, high level)
@@ -184,11 +184,13 @@ into commands executed on the host. No agents, no streaming, and with
 2. ~~Confirm web-first~~ → **Resolved: web-first** (2026-06-25), one web app
    delivered hosted or self-hosted via npm; **no native desktop** (2026-06-26). See
    `plan.md §1`.
-3. `ssh-agent`/passphrase support in v1 (FR-002).
+3. ~~`ssh-agent`~~ → **Resolved (2026-06-26): post-v1** (v1 = key PEM/passphrase +
+   password) (FR-002).
 4. ~~Credential store~~ → **Resolved (2026-06-26): v1 does not persist** (ask each
    session); encrypted store post-v1 (FR-005).
 5. ~~Drag & drop~~ → **Resolved (2026-06-26): post-v1** (FR-024).
-6. i18n scope in v1 (NFR-Accessibility/i18n).
+6. ~~i18n scope~~ → **Resolved (2026-06-26): i18n-ready from day 1, v1 ships EN +
+   ES** (NFR-Accessibility/i18n).
 7. ~~v1 app set~~ → **Resolved (2026-06-25):** focused cut = Connection/hosts,
    Shell, File manager, Editor, Terminal and System monitor; the rest *(post-v1)*
    (see §6 and `plan.md §6`).

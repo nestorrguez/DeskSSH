@@ -9,7 +9,8 @@
 
 - [x] **web-first + agnostic core** direction confirmed (plan §1).
 - [x] Open source **license** chosen — AGPL-3.0-or-later (spec §9.1).
-- [ ] **Stack** confirmed (plan §3).
+- [x] **Stack** confirmed — TS + Node + ssh2 + React, Tailwind + Radix (shadcn/ui),
+  Lucide, xterm.js (plan §3).
 - [x] **App subset** of the first coded milestone agreed (spec §9.7).
 
 ## Task skeleton (to be filled per milestone)

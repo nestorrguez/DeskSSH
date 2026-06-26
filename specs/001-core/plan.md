@@ -186,8 +186,9 @@ column). Windows is prioritized for popularity despite being the most costly.
 
 - The backend is the critical surface: gateway user authentication, strict per-user
   session isolation, rate limiting.
-- Secrets: never in plain text nor in logs. `[NEEDS DECISION]` store (OS keychain /
-  local encryption with a derived key / no persistence, ask each time).
+- Secrets: never in plain text nor in logs. **v1 does not persist** (ask each
+  session, in-memory only); an encrypted store (OS keychain / local encryption with
+  a derived key) is post-v1 (FR-005).
 - Destructive actions: mandatory confirmation at the app layer (FR-090).
 - SSH host key verification (avoid MITM); `known_hosts` policy.
 - Auditing: the transparency log also serves as an audit trail.
