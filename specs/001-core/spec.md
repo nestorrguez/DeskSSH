@@ -70,11 +70,17 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 2. Se conecta; DeskSSH detecta el SO y abre el **escritorio**.
 3. Abre el **gestor de archivos**, navega, copia un archivo (ve la confirmación y,
    opcionalmente, el comando).
-4. Abre el **monitor del sistema** y el **gestor de servicios**, reinicia un
-   servicio (confirmación obligatoria por ser acción sensible).
+4. Abre el **monitor del sistema** y comprueba CPU/memoria/disco de un vistazo.
+   (La gestión de servicios/procesos llega *post-v1*.)
 5. Abre una **terminal** real para algo puntual. Cierra la sesión.
 
 ## 6. Requisitos funcionales
+
+> **Alcance de apps de la v1 (corte enfocado):** Conexión/hosts, Shell de
+> escritorio, Gestor de archivos, Editor de texto, Terminal y **Monitor del
+> sistema**. Las apps marcadas *(post-v1)* abajo —Procesos, Servicios, Visor de
+> logs, Paquetes— se especifican aquí pero se implementan después de la v1
+> (ver `plan.md §6`).
 
 ### Conexión y hosts
 - **FR-001** Añadir, editar y eliminar hosts (nombre, dirección, puerto, usuario).
@@ -127,15 +133,15 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 - **FR-030** Terminal interactiva real (PTY sobre SSH) con redimensionado.
 - **FR-031** Reusar la sesión SSH del host ya conectado.
 
-### App: Procesos / Administrador de tareas
+### App: Procesos / Administrador de tareas *(post-v1)*
 - **FR-040** Listar procesos (uso de CPU/mem, PID, usuario, comando).
 - **FR-041** Terminar un proceso (confirmación obligatoria).
 
 ### App: Monitor del sistema
 - **FR-050** Mostrar CPU, memoria, disco y uptime, con refresco periódico.
 
-### App: Gestor de servicios
-- **FR-060** Listar servicios (systemd en v1) y su estado.
+### App: Gestor de servicios *(post-v1)*
+- **FR-060** Listar servicios (systemd primero) y su estado.
 - **FR-061** Iniciar, parar y reiniciar servicios (confirmación obligatoria).
 - **FR-062** Ver el estado/log reciente de un servicio.
 
@@ -143,7 +149,7 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 - **FR-070** Abrir, editar y guardar archivos de texto remotos.
 - **FR-071** Avisar de ediciones sin guardar al cerrar.
 
-### App: Visor de logs
+### App: Visor de logs *(post-v1)*
 - **FR-080** Ver y seguir (`tail -f`/`journalctl -f`) logs en streaming.
 
 ### Transversales
@@ -183,4 +189,6 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 4. Almacén de credenciales: keychain del SO, cifrado local o no persistir (FR-005).
 5. Drag & drop en el gestor de archivos en v1 o después (FR-024).
 6. Alcance de i18n en v1 (NFR-Accesibilidad/i18n).
-7. Conjunto mínimo de apps que entra en el primer hito codeado (subconjunto de §6).
+7. ~~Conjunto de apps de la v1~~ → **Resuelto (2026-06-25):** corte enfocado =
+   Conexión/hosts, Shell, Gestor de archivos, Editor, Terminal y Monitor del
+   sistema; resto *(post-v1)* (ver §6 y `plan.md §6`).

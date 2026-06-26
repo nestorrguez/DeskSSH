@@ -186,15 +186,21 @@ El número de tier indica **prioridad de roadmap, NO dificultad** (ver columna
 
 ## 6. Fases / hitos
 
+**v1 = corte enfocado, accesibilidad primero.** App set de v1: conexión/hosts,
+shell de escritorio, gestor de archivos, editor de texto, terminal y **monitor del
+sistema**. Procesos, servicios, visor de logs y paquetes quedan **post-v1**.
+
 - **M0 — Andamiaje:** monorepo, paquetes vacíos, CI básica, licencia, contribuir.
 - **M1 — Núcleo de conexión:** sesión SSH (exec/PTY/SFTP) + detección de SO +
-  adaptador Debian/Ubuntu. Demostrable por tests/CLI mínima.
+  adaptador Debian/Ubuntu + base del contrato de capacidades. Demostrable por
+  tests/CLI mínima.
 - **M2 — Shell + Terminal + Gestor de archivos:** primer escritorio usable.
-- **M3 — Procesos + Monitor + Servicios:** administración básica.
-- **M4 — Editor + Visor de logs + transparencia en UI:** experiencia v1 completa.
-- **M5 — Empaquetado desktop** (si se confirma): Tauri/Electron del mismo núcleo.
-
-`[NECESITA DECISIÓN]` qué apps entran en M2 vs más tarde (subconjunto de spec §6).
+- **M3 — Editor de texto + Monitor del sistema + transparencia en UI:** **completa
+  la v1.**
+- **── 🚀 Release v1 ──**
+- **Post-v1 (apps de admin):** Procesos + Servicios + Visor de logs + Paquetes.
+- **Post-v1 (hosts):** bajar por el roadmap de tiers (Windows → resto Linux → …).
+- **Post-v1 (desktop):** empaquetado Tauri/Electron del mismo núcleo.
 
 ## 7. Riesgos y mitigaciones
 
@@ -211,9 +217,9 @@ El número de tier indica **prioridad de roadmap, NO dificultad** (ver columna
 **Cerradas (2026-06-25):**
 - **Web-first** + núcleo agnóstico como arquitectura de v1.
 - **Licencia AGPL-3.0-or-later** (ver `constitution.md` y `LICENSE`).
+- **Usuario #1 = accesibilidad**; **v1 enfocada** (app set en §6).
 
 **Abiertas:**
 1. Stack: confirmar TS/Node/`ssh2`/React; framework de UI/estilos.
 2. Almacén de credenciales.
-3. Apps incluidas en cada hito (M2 en concreto).
-4. Tauri vs Electron para el empaquetado desktop (cuando llegue M5).
+3. Tauri vs Electron para el empaquetado desktop (post-v1).
