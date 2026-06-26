@@ -82,6 +82,22 @@ entrada baja para contribuidores: stack mainstream, documentación en `specs/`,
 decisiones explicadas y trazables. Sin dependencias propietarias en el camino
 crítico ni con licencias incompatibles con AGPL-3.0.
 
+## Artículo 10 — Primitivas no interactivas y estructuradas
+
+DeskSSH **no pilota herramientas interactivas remotas** (nano, vim, top, etc.)
+enviándoles pulsaciones por un PTY: es frágil, dependiente de versión e imposible
+de normalizar entre plataformas. En su lugar, toda función se construye sobre
+**primitivas no interactivas y de salida estructurada** definidas en el contrato
+de capacidades (p. ej. `readFile`/`writeFile` en vez de lanzar un editor remoto),
+y la experiencia se **emula en el cliente**. Se prefiere siempre pedir salida
+legible por máquina antes que parsear formato humano.
+
+La **única excepción deliberada** es la app de **terminal**, que expone el shell
+crudo a propósito (y donde el usuario sí ve `bash`/`PowerShell`/`csh`).
+
+Este artículo es la base que hace viable la portabilidad del Artículo 6: sin
+salidas estructuradas, el contrato de capacidades no podría normalizar entre SO.
+
 ---
 
 ## Enmiendas
