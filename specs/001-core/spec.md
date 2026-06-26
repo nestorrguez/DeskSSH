@@ -148,7 +148,8 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 
 1. ~~Licencia open source~~ → **Resuelto (2026-06-25): AGPL-3.0-or-later** (ver
    `constitution.md` y `LICENSE`).
-2. **Confirmar web-first** como modelo de entrega de v1 (ver `plan.md`).
+2. ~~Confirmar web-first~~ → **Resuelto (2026-06-25): web-first** con núcleo
+   agnóstico; desktop como empaquetado posterior (ver `plan.md` §1).
 3. Soporte de `ssh-agent`/passphrase en v1 (FR-002).
 4. Almacén de credenciales: keychain del SO, cifrado local o no persistir (FR-005).
 5. Drag & drop en el gestor de archivos en v1 o después (FR-024).

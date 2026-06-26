@@ -23,7 +23,7 @@ Razones:
   backend en `localhost`), sin reescribir lógica.
 
 Resultado: **una sola base de lógica**, dos formas de entrega. Empezamos por web.
-`[NECESITA DECISIÓN]` confirmar esta dirección antes de codear.
+**Decisión confirmada (2026-06-25).**
 
 ```
 ┌────────────────────────────┐        ┌───────────────────────────────┐
@@ -129,11 +129,14 @@ Resultado: **una sola base de lógica**, dos formas de entrega. Empezamos por we
 | Sobre-alcance de apps | v1 nunca termina | Cerrar subconjunto mínimo de apps por hito |
 | Acoplar lógica a la UI | Rompe desktop futuro | Núcleo agnóstico estricto (Art. 5) |
 
-## 8. Decisiones abiertas (recopilatorio)
+## 8. Decisiones
 
-1. Confirmar **web-first** + núcleo agnóstico como arquitectura de v1.
-2. Licencia (AGPL-3.0 vs MIT).
-3. Stack: confirmar TS/Node/`ssh2`/React; framework de UI/estilos.
-4. Almacén de credenciales.
-5. Apps incluidas en cada hito (M2 en concreto).
-6. Tauri vs Electron para el empaquetado desktop (cuando llegue M5).
+**Cerradas (2026-06-25):**
+- **Web-first** + núcleo agnóstico como arquitectura de v1.
+- **Licencia AGPL-3.0-or-later** (ver `constitution.md` y `LICENSE`).
+
+**Abiertas:**
+1. Stack: confirmar TS/Node/`ssh2`/React; framework de UI/estilos.
+2. Almacén de credenciales.
+3. Apps incluidas en cada hito (M2 en concreto).
+4. Tauri vs Electron para el empaquetado desktop (cuando llegue M5).
