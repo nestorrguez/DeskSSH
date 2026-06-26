@@ -70,8 +70,11 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 
 ### Conexión y hosts
 - **FR-001** Añadir, editar y eliminar hosts (nombre, dirección, puerto, usuario).
-- **FR-002** Autenticación por clave SSH y por contraseña. `[NECESITA DECISIÓN]`
-  ¿soporte de `ssh-agent`/passphrase en v1?
+- **FR-002** Autenticación mediante: (a) **clave privada** SSH —el usuario aporta
+  el archivo de clave (formatos **PEM / OpenSSH / PKCS#8**), con **passphrase
+  opcional**—, y (b) **contraseña**. (La protección/almacenamiento de la clave se
+  rige por FR-005 y el Art. 4 de la constitución.) `[NECESITA DECISIÓN]` ¿soporte
+  de `ssh-agent` en v1?
 - **FR-003** Conectar/desconectar; mostrar estado de la sesión (conectando, viva,
   caída, error).
 - **FR-004** Detectar la familia de SO del host para elegir el adaptador (Art. 6).
