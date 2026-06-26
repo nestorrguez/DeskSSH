@@ -48,14 +48,21 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 
 ## 5. Personas y casos de uso
 
+> **Persona principal de la v1: "Usuario con poca soltura en CLI".** La v1
+> prioriza **accesibilidad**: defaults seguros y guiados, lenguaje llano, la
+> terminal como último recurso y la transparencia (Art. 3) presentada de forma
+> *educativa y a demanda*, no protagonista. El resto de personas se atiende, pero
+> no marca el rumbo del diseño.
+
+- **⭐ Usuario con un VPS pero poca soltura en CLI (PRINCIPAL)** — administra su
+  servidor con una GUI sin tener que dominar la terminal. *"Quiero gestionar mi
+  servidor sin que la consola me intimide."*
 - **Sysadmin / DevOps** — administra VPS y servidores; quiere rapidez y ver qué se
   ejecuta. *"Reviso servicios y logs sin memorizar flags."*
 - **Desarrollador** — despliega en un VPS; quiere gestionar archivos y procesos
   con comodidad. *"Subo un build y reinicio el servicio sin abrir 3 terminales."*
 - **Persona que aprende Linux** — la transparencia de comandos le enseña.
   *"Veo qué comando hace cada cosa que pulso."*
-- **Usuario con un VPS pero poca soltura en CLI** — administra su servidor con una
-  GUI sin tener que dominar la terminal.
 
 ### Recorrido principal
 
