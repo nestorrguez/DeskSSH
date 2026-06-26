@@ -19,16 +19,22 @@ export function detectLocale(
   return DEFAULT_LOCALE;
 }
 
-/** Translate a key for a locale. Missing translations fall back to English. */
-export function translate(locale: Locale, key: MessageKey): string {
-  return catalogs[locale][key] ?? en[key];
+export type MessageParams = Record<string, string | number>;
+
+/** Translate a key, replacing `{name}` placeholders. Falls back to English. */
+export function translate(locale: Locale, key: MessageKey, params?: MessageParams): string {
+  const template = catalogs[locale][key] ?? en[key];
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (_, name: string) =>
+    name in params ? String(params[name]) : `{${name}}`,
+  );
 }
 
-/** A bound translator `t(key)` for a fixed locale, convenient in components. */
-export type Translator = (key: MessageKey) => string;
+/** A bound translator `t(key, params?)` for a fixed locale, convenient in components. */
+export type Translator = (key: MessageKey, params?: MessageParams) => string;
 
 export function makeTranslator(locale: Locale): Translator {
-  return (key) => translate(locale, key);
+  return (key, params) => translate(locale, key, params);
 }
 
 export type { MessageKey };

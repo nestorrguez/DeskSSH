@@ -138,14 +138,47 @@ async function handle(
 
   if (route === 'POST /api/listdir') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;
-    const entry = manager.get(asString(body, 'sessionId'));
-    if (!entry) throw new HttpError(404, 'Unknown session');
+    const entry = requireSession(manager, body);
     const path = typeof body['path'] === 'string' && body['path'] ? body['path'] : entry.home;
     const result = await entry.adapter.listDir(path);
     return sendJson(res, 200, { path, result, transparency: entry.log.list() });
   }
 
+  if (route === 'POST /api/metrics') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    return sendJson(res, 200, { result: await entry.adapter.systemMetrics() });
+  }
+
+  if (route === 'POST /api/readfile') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    const result = await entry.adapter.readFile(asString(body, 'path'));
+    // Bytes are not JSON-safe: send base64 on success, the raw result otherwise.
+    if (result.kind === 'ok') {
+      return sendJson(res, 200, {
+        result: { kind: 'ok', base64: Buffer.from(result.value).toString('base64') },
+      });
+    }
+    return sendJson(res, 200, { result });
+  }
+
+  if (route === 'POST /api/writefile') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    const bytes = Buffer.from(asString(body, 'base64'), 'base64');
+    const result = await entry.adapter.writeFile(asString(body, 'path'), new Uint8Array(bytes));
+    return sendJson(res, 200, { result });
+  }
+
   sendJson(res, 404, { error: `No route for ${route}` });
+}
+
+/** Look up the session named in the request body, or throw 404. */
+function requireSession(manager: SessionManager, body: Record<string, unknown>) {
+  const entry = manager.get(asString(body, 'sessionId'));
+  if (!entry) throw new HttpError(404, 'Unknown session');
+  return entry;
 }
 
 /** Validate and normalize the auth block from a request body (no secret logging). */

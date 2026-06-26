@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { Translator } from '@/i18n';
 import type { SessionInfo } from '@/api/gateway';
 import { useWindows } from './useWindows';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
-import { getApps } from './apps';
+import { getApps } from './apps/index';
+import type { AppContext } from './types';
 
 interface DesktopProps {
   t: Translator;
@@ -16,6 +17,19 @@ interface DesktopProps {
 export function Desktop({ t, session, onDisconnect }: DesktopProps) {
   const apps = useMemo(() => getApps(t), [t]);
   const wm = useWindows();
+  const [editorTarget, setEditorTarget] = useState<string | null>(null);
+
+  // Let any app open a file in the editor (Stallman) and focus its window.
+  const openEditor = useCallback(
+    (path: string) => {
+      setEditorTarget(path);
+      const editor = apps.find((a) => a.id === 'editor');
+      if (editor) wm.openApp(editor);
+    },
+    [apps, wm],
+  );
+
+  const ctx: AppContext = { t, session, editorTarget, openEditor };
 
   // The window with the highest z is the active one.
   const visible = wm.windows.filter((w) => !w.minimized);
@@ -50,7 +64,7 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
               onMove={(x, y) => wm.move(win.id, x, y)}
               onResize={(w, h) => wm.resize(win.id, w, h)}
             >
-              {apps.find((a) => a.id === win.appId)?.render({ t, session })}
+              {apps.find((a) => a.id === win.appId)?.render(ctx)}
             </Window>
           ),
         )}

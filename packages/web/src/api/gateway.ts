@@ -3,7 +3,7 @@
 // imports from @deskssh/core are erased at build, so no Node/ssh2 code reaches the
 // bundle.
 
-import type { CapabilityResult, FileEntry, CommandRecord } from '@deskssh/core';
+import type { CapabilityResult, FileEntry, CommandRecord, SystemMetrics } from '@deskssh/core';
 
 export type AuthInput =
   | { kind: 'password'; password: string }
@@ -63,4 +63,27 @@ export function listDir(sessionId: string, path?: string): Promise<ListDirRespon
 
 export function disconnect(sessionId: string): Promise<{ ok: boolean }> {
   return post<{ ok: boolean }>('/api/disconnect', { sessionId });
+}
+
+export function systemMetrics(
+  sessionId: string,
+): Promise<{ result: CapabilityResult<SystemMetrics> }> {
+  return post('/api/metrics', { sessionId });
+}
+
+/** Read a file; on success the bytes arrive base64-encoded. */
+type ReadFileResult =
+  | { kind: 'ok'; base64: string }
+  | { kind: 'degraded' | 'failed' | 'unsupported'; reason: string };
+
+export function readFile(sessionId: string, path: string): Promise<{ result: ReadFileResult }> {
+  return post('/api/readfile', { sessionId, path });
+}
+
+export function writeFile(
+  sessionId: string,
+  path: string,
+  base64: string,
+): Promise<{ result: CapabilityResult<void> }> {
+  return post('/api/writefile', { sessionId, path, base64 });
 }

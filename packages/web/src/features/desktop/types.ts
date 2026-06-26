@@ -7,6 +7,10 @@ import type { SessionInfo } from '@/api/gateway';
 export interface AppContext {
   t: Translator;
   session: SessionInfo;
+  /** The file the editor (Stallman) should open, set via {@link openEditor}. */
+  editorTarget: string | null;
+  /** Open a file in the editor app from anywhere (e.g. the file manager). */
+  openEditor: (path: string) => void;
 }
 
 /** A launchable desktop app (file manager, terminal, …). */

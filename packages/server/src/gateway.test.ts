@@ -6,9 +6,10 @@ import { createGateway } from './gateway.js';
 import { SessionManager } from './session-manager.js';
 import type { SessionOpener } from './opener.js';
 
-// A fake opener: no SSH, an adapter that lists one entry.
+// A fake opener: no SSH, an adapter covering the v1 capabilities.
 const fakeOpener: SessionOpener = (req) => {
   const log = new TransparencyLog();
+  const files = new Map<string, Uint8Array>();
   const adapter = {
     listDir: () =>
       Promise.resolve(
@@ -27,6 +28,22 @@ const fakeOpener: SessionOpener = (req) => {
           'raw',
         ),
       ),
+    systemMetrics: () =>
+      Promise.resolve(
+        ok(
+          {
+            uptimeSeconds: 100,
+            loadAverage: [0.1, 0.2, 0.3] as const,
+            memory: { totalBytes: 1000, usedBytes: 400, availableBytes: 600 },
+          },
+          'raw',
+        ),
+      ),
+    readFile: (path: string) => Promise.resolve(ok(files.get(path) ?? new Uint8Array(), '')),
+    writeFile: (path: string, contents: Uint8Array) => {
+      files.set(path, contents);
+      return Promise.resolve(ok(undefined, ''));
+    },
   } as unknown as Capabilities;
   return Promise.resolve({
     host: `${req.username}@${req.host}`,
@@ -111,5 +128,33 @@ describe('gateway', () => {
     expect(off.json.ok).toBe(true);
     const after = await post('/api/listdir', { sessionId: conn.sessionId });
     expect(after.status).toBe(404);
+  });
+
+  async function connectSession(): Promise<string> {
+    const { json } = await post('/api/connect', {
+      host: 'h',
+      username: 'u',
+      auth: { kind: 'password', password: 'x' },
+    });
+    return json.sessionId as string;
+  }
+
+  it('metrics returns a typed snapshot', async () => {
+    const sessionId = await connectSession();
+    const { status, json } = await post('/api/metrics', { sessionId });
+    expect(status).toBe(200);
+    expect(json.result.kind).toBe('ok');
+    expect(json.result.value.memory.totalBytes).toBe(1000);
+  });
+
+  it('writefile then readfile round-trips bytes as base64', async () => {
+    const sessionId = await connectSession();
+    const base64 = Buffer.from('hello').toString('base64');
+    const wrote = await post('/api/writefile', { sessionId, path: '/tmp/a', base64 });
+    expect(wrote.json.result.kind).toBe('ok');
+
+    const read = await post('/api/readfile', { sessionId, path: '/tmp/a' });
+    expect(read.json.result.kind).toBe('ok');
+    expect(Buffer.from(read.json.result.base64, 'base64').toString('utf8')).toBe('hello');
   });
 });
