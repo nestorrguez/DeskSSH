@@ -1,8 +1,27 @@
-// @deskssh/server — web gateway.
-// Holds live SSH sessions, authenticates the gateway user and exposes the API
-// (HTTP for one-off actions, WebSocket for PTY and streams). Built on @deskssh/core.
+// @deskssh/server — web gateway. Holds live SSH sessions (via @deskssh/core) and
+// exposes a small HTTP API; the browser only ever handles opaque session ids.
 
-import { CORE_PACKAGE } from '@deskssh/core';
+import { createGateway } from './gateway.js';
 
 export const SERVER_PACKAGE = '@deskssh/server';
-export const CORE_DEPENDENCY = CORE_PACKAGE;
+export { createGateway, type GatewayDeps } from './gateway.js';
+export {
+  SessionManager,
+  toSessionInfo,
+  type SessionInfo,
+  type SessionEntry,
+} from './session-manager.js';
+export { openSshSession, type ConnectRequest, type SessionOpener } from './opener.js';
+
+/** Start the gateway on the given port (defaults to PORT env or 8717). */
+export function startGateway(port = Number(process.env['PORT'] ?? 8717)): void {
+  const server = createGateway();
+  server.listen(port, () => {
+    console.log(`DeskSSH gateway listening on http://localhost:${String(port)}`);
+  });
+}
+
+// Run directly (node dist/index.js), not when imported.
+if (import.meta.url === `file://${process.argv[1] ?? ''}`) {
+  startGateway();
+}

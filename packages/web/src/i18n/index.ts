@@ -24,4 +24,11 @@ export function translate(locale: Locale, key: MessageKey): string {
   return catalogs[locale][key] ?? en[key];
 }
 
+/** A bound translator `t(key)` for a fixed locale, convenient in components. */
+export type Translator = (key: MessageKey) => string;
+
+export function makeTranslator(locale: Locale): Translator {
+  return (key) => translate(locale, key);
+}
+
 export type { MessageKey };
