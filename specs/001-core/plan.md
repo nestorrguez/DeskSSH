@@ -69,11 +69,11 @@ details (styling framework, icon set) still open — see §8. Alternatives noted
   security/performance, at the cost of a higher entry barrier → discarded for v1.
 - **Frontend (`web`):** React + TypeScript. Terminal with **`xterm.js`**.
   Movable/resizable windows with a lightweight library (e.g. `react-rnd` style) or
-  custom components. `[NEEDS DECISION]` UI/styling framework and **icon set**.
-  - *Icon set:* must be **AGPL-compatible** — MIT/ISC/Apache-2.0 (e.g. **Lucide**
-    (ISC, leaning), Tabler/Phosphor/Heroicons (MIT), Material Symbols (Apache-2.0)),
-    or Font Awesome **Free** (CC BY 4.0 icons + OFL fonts + MIT code, attribution
-    required). Avoid Font Awesome **Pro** (proprietary).
+  custom components. `[NEEDS DECISION]` UI/styling framework.
+  - *Icon set:* **Lucide** (`lucide-react`, **ISC** — AGPL-compatible, no
+    attribution), chosen for its clean, uniform stroke style fitting the
+    accessibility-first UI. (Considered: Tabler/Phosphor/Heroicons MIT, Material
+    Symbols Apache-2.0, Font Awesome Free CC BY; FA Pro proprietary — avoided.)
 - **Desktop (future):** **Tauri** preferred (lightweight, Rust) over Electron,
   unless reusing the `server`'s Node inside the binary is desired → then Electron.
 
@@ -223,9 +223,9 @@ services, log viewer and packages are **post-v1**.
 
 **Closed (2026-06-26):**
 - **Core stack: TypeScript + Node + `ssh2` + React.**
+- **Icon set: Lucide** (ISC — AGPL-compatible, no attribution required).
 
 **Open:**
-1. UI layer: styling framework + **icon set** (must be AGPL-compatible; leaning
-   **Lucide**, ISC).
+1. UI styling framework.
 2. Credential store.
 3. Tauri vs Electron for desktop packaging (post-v1).
