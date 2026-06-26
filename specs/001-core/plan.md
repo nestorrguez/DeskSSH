@@ -57,7 +57,8 @@ confirmed (2026-06-25).**
 
 ## 3. Proposed stack (v1)
 
-`[NEEDS DECISION]` to confirm; alternatives noted.
+Core stack **confirmed (2026-06-26): TypeScript + Node + `ssh2` + React.** UI
+details (styling framework, icon set) still open — see §8. Alternatives noted.
 
 - **Language:** TypeScript across the stack → a single language lowers the
   contribution barrier (Art. 9).
@@ -68,7 +69,11 @@ confirmed (2026-06-25).**
   security/performance, at the cost of a higher entry barrier → discarded for v1.
 - **Frontend (`web`):** React + TypeScript. Terminal with **`xterm.js`**.
   Movable/resizable windows with a lightweight library (e.g. `react-rnd` style) or
-  custom components. `[NEEDS DECISION]` UI/styling framework.
+  custom components. `[NEEDS DECISION]` UI/styling framework and **icon set**.
+  - *Icon set:* must be **AGPL-compatible** — MIT/ISC/Apache-2.0 (e.g. **Lucide**
+    (ISC, leaning), Tabler/Phosphor/Heroicons (MIT), Material Symbols (Apache-2.0)),
+    or Font Awesome **Free** (CC BY 4.0 icons + OFL fonts + MIT code, attribution
+    required). Avoid Font Awesome **Pro** (proprietary).
 - **Desktop (future):** **Tauri** preferred (lightweight, Rust) over Electron,
   unless reusing the `server`'s Node inside the binary is desired → then Electron.
 
@@ -216,7 +221,11 @@ services, log viewer and packages are **post-v1**.
 - **License AGPL-3.0-or-later** (see `constitution.md` and `LICENSE`).
 - **User #1 = accessibility**; **focused v1** (app set in §6).
 
+**Closed (2026-06-26):**
+- **Core stack: TypeScript + Node + `ssh2` + React.**
+
 **Open:**
-1. Stack: confirm TS/Node/`ssh2`/React; UI/styling framework.
+1. UI layer: styling framework + **icon set** (must be AGPL-compatible; leaning
+   **Lucide**, ISC).
 2. Credential store.
 3. Tauri vs Electron for desktop packaging (post-v1).
