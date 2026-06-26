@@ -75,10 +75,54 @@ Resultado: **una sola base de lógica**, dos formas de entrega. Empezamos por we
 
 ## 4. Diseño del núcleo
 
+### Contrato de capacidades (IR de adaptadores)
+
+El núcleo define un **contrato de capacidades**: un catálogo cerrado de operaciones
+abstractas y **tipadas** que las apps invocan **sin saber en qué SO corren**. Es el
+"lenguaje intermedio" del sistema (una *representación intermedia*, IR). Dos piezas:
+
+1. **Contrato (interfaz tipada).** Cada capacidad declara entradas y, sobre todo,
+   una **salida normalizada**. Ejemplos:
+   - `listDir(path) → FileEntry[]` — no texto, sino un array de
+     `{ name, type, size, mode, owner, mtime }`.
+   - `listProcesses() → Process[]`
+   - `readFile(path) → bytes` · `writeFile(path, bytes) → void`
+   - `serviceAction(name, action) → ServiceState`
+
+   El valor está en el **tipo de la salida**: si una app sabe que `listDir`
+   devuelve un `FileEntry[]`, ya no le importa cómo se obtuvo ni en qué plataforma.
+
+2. **Manifiestos de adaptador (declarativos) + válvula de escape.** Cada plataforma
+   implementa el contrato. El 80% de los casos, de forma **declarativa** (plantilla
+   de comando + spec de normalización de la salida); el 20% difícil (busybox,
+   PowerShell) con un **hook en código**.
+
+**Reglas que lo sostienen:**
+- Las apps **nunca** parsean salida cruda; solo consumen tipos del contrato. El
+  parseo y su *fallback* viven en el adaptador (refuerza el Art. 7).
+- **Normalizar en origen**: pedir salida estructurada (`stat -c`, `ps -eo`,
+  `ConvertTo-Json`…) en vez de parsear formato humano.
+- **Huecos de capacidad**: si una plataforma no soporta una operación (p. ej.
+  `chmod` en Windows), el adaptador la declara *no soportada* y la UI degrada con
+  elegancia, en lugar de fingir.
+
+#### Primitivas no interactivas > pilotar TUIs
+
+Corolario del contrato (y respuesta a "cómo emular nano"): DeskSSH **no maneja
+herramientas interactivas remotas** (nano, vim, top…) enviándoles pulsaciones por
+un PTY —sería frágil e imposible de normalizar—. Usa **primitivas no interactivas
+y estructuradas** y **emula la experiencia en el cliente**:
+- **Editor** = `readFile` + `writeFile` + un editor propio en la GUI (no se lanza
+  nano en el remoto).
+- **Monitor** = `listProcesses`/`systemMetrics` por *polling*, no un `top` vivo.
+- La **única** excepción deliberada es la **app de terminal**, que sí expone el
+  shell crudo (ahí el usuario ve `bash`/`PowerShell`/`csh`).
+
 ### Adaptadores de SO
-- Interfaz uniforme: p. ej. `listDir`, `stat`, `listProcesses`, `listServices`,
-  `serviceAction`, `systemMetrics`, etc.
-- Cada **familia de SO** es un adaptador que implementa la interfaz uniforme.
+- El contrato anterior expone una **interfaz uniforme** (`listDir`, `stat`,
+  `listProcesses`, `listServices`, `serviceAction`, `systemMetrics`, …).
+- Cada **familia de SO** es un adaptador que implementa ese contrato, de forma
+  declarativa cuando es posible.
   **v1 cubre solo Debian/Ubuntu/Mint** (ver roadmap de hosts abajo).
 - Detección al conectar (`/etc/os-release`, `uname`), con un adaptador POSIX
   genérico de respaldo para Unix-likes aún no soportados.
