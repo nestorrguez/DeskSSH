@@ -13,12 +13,15 @@ import {
 } from './opener.js';
 import { FileKnownHosts } from './known-hosts.js';
 import { attachTerminal } from './terminal.js';
+import { serveStatic } from './static.js';
 
 const MAX_BODY_BYTES = 1_000_000; // PEM keys are small; cap to avoid abuse.
 
 export interface GatewayDeps {
   readonly manager?: SessionManager;
   readonly opener?: SessionOpener;
+  /** Directory of the built web UI to serve (self-hosted npm package). */
+  readonly staticDir?: string;
 }
 
 class HttpError extends Error {
@@ -79,7 +82,7 @@ export function createGateway(deps: GatewayDeps = {}): Server {
   const opener = deps.opener ?? createSshOpener(new FileKnownHosts());
 
   const server = createServer((req, res) => {
-    handle(req, res, manager, opener).catch((err: unknown) => {
+    handle(req, res, manager, opener, deps.staticDir).catch((err: unknown) => {
       const status = err instanceof HttpError ? err.status : 500;
       const message = err instanceof Error ? err.message : 'Internal error';
       if (!res.headersSent) sendJson(res, status, { error: message });
@@ -96,9 +99,15 @@ async function handle(
   res: ServerResponse,
   manager: SessionManager,
   opener: SessionOpener,
+  staticDir?: string,
 ): Promise<void> {
   const url = new URL(req.url ?? '/', 'http://localhost');
   const route = `${req.method ?? 'GET'} ${url.pathname}`;
+
+  // Non-API GET requests are served from the bundled web UI, if configured.
+  if (req.method === 'GET' && !url.pathname.startsWith('/api/') && staticDir) {
+    if (serveStatic(staticDir, url.pathname, res)) return;
+  }
 
   if (route === 'GET /api/health') return sendJson(res, 200, { ok: true });
 

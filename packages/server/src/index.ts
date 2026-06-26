@@ -20,12 +20,25 @@ export {
 } from './opener.js';
 export { InMemoryKnownHosts, FileKnownHosts, type KnownHostsStore } from './known-hosts.js';
 
-/** Start the gateway on the given port (defaults to PORT env or 8717). */
-export function startGateway(port = Number(process.env['PORT'] ?? 8717)): void {
-  const server = createGateway();
-  server.listen(port, () => {
-    console.log(`DeskSSH gateway listening on http://localhost:${String(port)}`);
+export interface StartOptions {
+  /** Port to listen on (default: PORT env or 8717). */
+  port?: number;
+  /** Interface to bind. Default 127.0.0.1 — DeskSSH is an SSH proxy and must not
+   *  be exposed on all interfaces by accident (Art. 4). */
+  host?: string;
+  /** Directory of the built web UI to serve. */
+  staticDir?: string;
+}
+
+/** Start the gateway and return the bound HTTP server. */
+export function startGateway(options: StartOptions = {}) {
+  const port = options.port ?? Number(process.env['PORT'] ?? 8717);
+  const host = options.host ?? process.env['HOST'] ?? '127.0.0.1';
+  const server = createGateway({ staticDir: options.staticDir });
+  server.listen(port, host, () => {
+    console.log(`DeskSSH listening on http://${host}:${String(port)}`);
   });
+  return server;
 }
 
 // Run directly (node dist/index.js), not when imported.

@@ -1,12 +1,36 @@
 #!/usr/bin/env node
-// DeskSSH CLI — placeholder for the self-hosted (npm) distribution.
-// DeskSSH is in early development and not yet functional; this entry exists to
-// reserve the package name and provide the future `deskssh` launch command.
+// DeskSSH launcher. Starts the gateway (which also serves the web UI) on
+// 127.0.0.1 and opens the browser. DeskSSH runs on *your* machine and connects to
+// *your* servers; it binds to localhost so it is never exposed by accident.
 
-console.log(`DeskSSH 0.0.1 — early development, not yet functional.
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { startGateway } from '../dist/server.js';
 
-A graphical desktop over plain SSH: the GUI is synthesized client-side and
-every action maps to remote commands. Not remote desktop. Agentless.
+const here = dirname(fileURLToPath(import.meta.url));
+const staticDir = join(here, '..', 'dist', 'web');
 
-Follow progress: https://github.com/nestorrguez/DeskSSH
-`);
+const port = Number(process.env.PORT ?? 8717);
+const host = process.env.HOST ?? '127.0.0.1';
+const url = `http://${host}:${port}`;
+
+startGateway({ port, host, staticDir });
+
+console.log(`\n  DeskSSH is running at ${url}\n  Press Ctrl+C to stop.\n`);
+
+if (process.env.DESKSSH_NO_OPEN !== '1') openBrowser(url);
+
+function openBrowser(target) {
+  const cmd =
+    process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
+  try {
+    spawn(cmd, [target], {
+      stdio: 'ignore',
+      detached: true,
+      shell: process.platform === 'win32',
+    }).unref();
+  } catch {
+    // Opening the browser is best-effort; the URL is printed above.
+  }
+}

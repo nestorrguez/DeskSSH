@@ -41,10 +41,25 @@ documented in `specs/` before any code is written.
 The reason for making it **open source** is simple: I want DeskSSH to become a
 **genuinely useful and popular** tool, built and improved by the community.
 
+## Run it
+
+DeskSSH runs on **your** machine and connects to **your** servers:
+
+```bash
+npx deskssh
+# or: npm install -g deskssh && deskssh
+```
+
+It starts on `http://127.0.0.1:8717` and opens your browser. Enter a server's
+host, port, user and a password or private key (PEM) to get a familiar desktop —
+file manager, terminal, text editor (Stallman) and system monitor — all over plain
+SSH. Requires **Node.js >= 20**; remote host: Linux with SSH (Debian/Ubuntu/Mint in
+v1).
+
 ## Status
 
-🚧 **In design.** The project is developed with **Spec-Driven Development**: right
-now only the specification exists; code comes later. Start with:
+🚧 **Early MVP (v0.1.0).** The project is developed with **Spec-Driven
+Development**: the specification lives in `specs/`. Start with:
 
 - [`specs/vision.md`](specs/vision.md) — the why and the where-to (the vision).
 - [`specs/constitution.md`](specs/constitution.md) — the project's principles.

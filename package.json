@@ -11,6 +11,7 @@
   "packageManager": "pnpm@9.15.9",
   "scripts": {
     "build": "pnpm -r build",
+    "build:dist": "pnpm build && pnpm --filter @deskssh/web build && pnpm --filter deskssh bundle",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b",
