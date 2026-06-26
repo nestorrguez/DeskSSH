@@ -1,0 +1,139 @@
+# Plan técnico — 001 Core
+
+**Cómo** se construye lo descrito en [`spec.md`](./spec.md), respetando la
+[`constitution.md`](../constitution.md). Las propuestas de stack son el punto de
+partida recomendado, no un dogma; las decisiones abiertas se marcan
+`[NECESITA DECISIÓN]`.
+
+---
+
+## 1. Resolución del conflicto web vs escritorio
+
+Decisión de registro: **núcleo agnóstico + entrega web-first; desktop como
+empaquetado posterior.**
+
+Razones:
+
+- El usuario quiere que "cualquiera pueda acceder en la red" → favorece web.
+- El **navegador no puede abrir conexiones SSH/TCP crudas**, así que en el modelo
+  web la sesión SSH debe vivir en un **backend** (gateway). Eso obliga, de todos
+  modos, a tener un núcleo separable de la UI (Art. 5).
+- Una vez que el núcleo es independiente, el **desktop** es simplemente
+  empaquetar ese mismo núcleo localmente (p. ej. Tauri/Electron levantando el
+  backend en `localhost`), sin reescribir lógica.
+
+Resultado: **una sola base de lógica**, dos formas de entrega. Empezamos por web.
+`[NECESITA DECISIÓN]` confirmar esta dirección antes de codear.
+
+```
+┌────────────────────────────┐        ┌───────────────────────────────┐
+│  Frontend (web / desktop)  │  WS/   │  Backend (gateway DeskSSH)    │
+│  shell de escritorio + UI  │ <────> │  sesiones SSH + API           │
+│  React + TS                │  HTTP  │  usa el NÚCLEO                 │
+└────────────────────────────┘        │   ┌────────────────────────┐  │   SSH
+                                       │   │  core (agnóstico)      │  │ <─────> Host
+                                       │   │  adaptadores, parsers, │  │  remoto
+                                       │   │  apps, sesiones        │  │ (POSIX)
+                                       │   └────────────────────────┘  │
+                                       └───────────────────────────────┘
+```
+
+## 2. Arquitectura por capas
+
+1. **`core`** (agnóstico, sin UI ni I/O de red propia de presentación):
+   - *Gestor de sesiones*: abstracción sobre una conexión SSH (ejecutar comando,
+     abrir PTY, abrir SFTP).
+   - *Adaptadores de SO*: detección + comandos específicos por familia (Art. 6).
+   - *Parsers*: convierten salida de comandos en estructuras de datos; con
+     fallback a salida cruda (Art. 7).
+   - *Apps*: cada app define qué datos pide y qué comandos ejecuta (gestor de
+     archivos, procesos, servicios, monitor, editor, logs).
+   - *Transparencia*: cada comando ejecutado se registra/expone (Art. 3).
+2. **`server`** (gateway web): mantiene sesiones SSH vivas, autentica al usuario,
+   expone una API (HTTP para acciones puntuales, WebSocket para PTY y streams),
+   aísla sesiones entre usuarios.
+3. **`web`** (frontend): shell de escritorio (ventanas, taskbar, lanzador) y las
+   vistas de cada app. Habla con `server`, nunca con SSH directamente.
+4. **`desktop`** (posterior): empaqueta `server` + `web` en una app local.
+
+## 3. Stack propuesto (v1)
+
+`[NECESITA DECISIÓN]` confirmar; alternativas anotadas.
+
+- **Lenguaje:** TypeScript en todo el stack → una sola lengua baja la barrera de
+  contribución (Art. 9).
+- **Monorepo:** pnpm workspaces. Paquetes: `core`, `server`, `web` (y luego
+  `desktop`).
+- **Backend (`server`):** Node.js + librería SSH `ssh2` (madura, soporta exec,
+  PTY y SFTP) + WebSocket (`ws`). *Alternativa:* Rust (`russh`) por seguridad/
+  rendimiento, a coste de mayor barrera de entrada → se descarta para v1.
+- **Frontend (`web`):** React + TypeScript. Terminal con **`xterm.js`**.
+  Ventanas movibles/redimensionables con una librería ligera (p. ej. estilo
+  `react-rnd`) o componentes propios. `[NECESITA DECISIÓN]` framework de UI/estilos.
+- **Desktop (futuro):** **Tauri** preferido (ligero, Rust) sobre Electron, salvo
+  que se quiera reusar Node del `server` dentro del binario → entonces Electron.
+
+## 4. Diseño del núcleo
+
+### Adaptadores de SO
+- Interfaz uniforme: p. ej. `listDir`, `stat`, `listProcesses`, `listServices`,
+  `serviceAction`, `systemMetrics`, etc.
+- Implementaciones por familia: Debian/Ubuntu, RHEL/Fedora, Arch (mínimo v1).
+- Detección al conectar (`/etc/os-release`, `uname`), con un adaptador POSIX
+  genérico de respaldo.
+- Preferir salidas legibles por máquina (`stat -c '%n|%s|%a|...'`, `ps -eo ...`,
+  flags `--json` cuando existan) sobre parsear formato humano.
+
+### Parsers y resiliencia
+- Cada parser recibe salida + código de salida; ante formato inesperado, devuelve
+  un resultado "degradado" con la salida cruda (Art. 7), nunca lanza y rompe.
+
+### Transparencia
+- Toda ejecución pasa por un único punto que registra `{comando, host, timestamp,
+  exitCode}` y lo hace consultable desde la UI (FR-013, Art. 3).
+
+### Rendimiento (Art. 8)
+- Caché de listados del VFS con invalidación por acción.
+- Batching de comandos relacionados en una sola invocación cuando sea posible.
+- UI optimista en operaciones de archivos, con reconciliación.
+
+## 5. Seguridad (Art. 4)
+
+- El backend es la superficie crítica: autenticación de usuario del gateway,
+  aislamiento estricto de sesiones por usuario, rate limiting.
+- Secretos: nunca en claro ni en logs. `[NECESITA DECISIÓN]` almacén (keychain del
+  SO / cifrado local con clave derivada / no persistir y pedir cada vez).
+- Acciones destructivas: confirmación obligatoria en la capa de app (FR-090).
+- Verificación de host key SSH (evitar MITM); política de `known_hosts`.
+- Auditoría: el registro de transparencia sirve también como traza de auditoría.
+
+## 6. Fases / hitos
+
+- **M0 — Andamiaje:** monorepo, paquetes vacíos, CI básica, licencia, contribuir.
+- **M1 — Núcleo de conexión:** sesión SSH (exec/PTY/SFTP) + detección de SO +
+  adaptador Debian/Ubuntu. Demostrable por tests/CLI mínima.
+- **M2 — Shell + Terminal + Gestor de archivos:** primer escritorio usable.
+- **M3 — Procesos + Monitor + Servicios:** administración básica.
+- **M4 — Editor + Visor de logs + transparencia en UI:** experiencia v1 completa.
+- **M5 — Empaquetado desktop** (si se confirma): Tauri/Electron del mismo núcleo.
+
+`[NECESITA DECISIÓN]` qué apps entran en M2 vs más tarde (subconjunto de spec §6).
+
+## 7. Riesgos y mitigaciones
+
+| Riesgo | Impacto | Mitigación |
+|--------|---------|------------|
+| Salida de comandos varía por SO/locale/versión | Parseo frágil | Adaptadores + salidas máquina + fallback a crudo (Art. 6/7) |
+| Latencia por round trips | UX lenta | Caché, batching, UI optimista (Art. 8) |
+| Backend = gateway SSH expuesto | Riesgo de seguridad alto | Auth, aislamiento, host keys, auditoría (§5) |
+| Sobre-alcance de apps | v1 nunca termina | Cerrar subconjunto mínimo de apps por hito |
+| Acoplar lógica a la UI | Rompe desktop futuro | Núcleo agnóstico estricto (Art. 5) |
+
+## 8. Decisiones abiertas (recopilatorio)
+
+1. Confirmar **web-first** + núcleo agnóstico como arquitectura de v1.
+2. Licencia (AGPL-3.0 vs MIT).
+3. Stack: confirmar TS/Node/`ssh2`/React; framework de UI/estilos.
+4. Almacén de credenciales.
+5. Apps incluidas en cada hito (M2 en concreto).
+6. Tauri vs Electron para el empaquetado desktop (cuando llegue M5).
