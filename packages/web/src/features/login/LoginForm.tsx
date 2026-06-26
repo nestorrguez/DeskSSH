@@ -1,7 +1,14 @@
 import { useState, type FormEvent } from 'react';
 import { KeyRound, Lock, Server } from 'lucide-react';
-import type { Translator } from '../../i18n';
-import type { ConnectInput } from '../../api/gateway';
+import type { Translator } from '@/i18n';
+import type { ConnectInput } from '@/api/gateway';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface LoginFormProps {
   t: Translator;
@@ -35,111 +42,114 @@ export function LoginForm({ t, busy, error, onSubmit }: LoginFormProps) {
   }
 
   return (
-    <form className="card" onSubmit={handleSubmit}>
-      <h1 className="card__title">
-        <Server size={20} aria-hidden /> {t('login.title')}
-      </h1>
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Server className="size-5" aria-hidden /> {t('login.title')}
+        </CardTitle>
+        <CardDescription>{t('app.tagline')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <div className="flex gap-3">
+            <div className="flex flex-1 flex-col gap-2">
+              <Label htmlFor="host">{t('login.host')}</Label>
+              <Input
+                id="host"
+                value={host}
+                onChange={(e) => setHost(e.target.value)}
+                placeholder="192.168.1.10"
+                autoComplete="off"
+                required
+              />
+            </div>
+            <div className="flex w-24 flex-col gap-2">
+              <Label htmlFor="port">{t('login.port')}</Label>
+              <Input
+                id="port"
+                value={port}
+                onChange={(e) => setPort(e.target.value)}
+                inputMode="numeric"
+                required
+              />
+            </div>
+          </div>
 
-      <div className="row">
-        <label className="field field--grow">
-          <span>{t('login.host')}</span>
-          <input
-            value={host}
-            onChange={(e) => setHost(e.target.value)}
-            placeholder="192.168.1.10"
-            autoComplete="off"
-            required
-          />
-        </label>
-        <label className="field field--port">
-          <span>{t('login.port')}</span>
-          <input
-            value={port}
-            onChange={(e) => setPort(e.target.value)}
-            inputMode="numeric"
-            required
-          />
-        </label>
-      </div>
-
-      <label className="field">
-        <span>{t('login.username')}</span>
-        <input
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          autoComplete="off"
-          required
-        />
-      </label>
-
-      <fieldset className="field">
-        <legend>{t('login.authMethod')}</legend>
-        <div className="toggle" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={method === 'password'}
-            className={method === 'password' ? 'toggle__btn is-active' : 'toggle__btn'}
-            onClick={() => setMethod('password')}
-          >
-            <Lock size={15} aria-hidden /> {t('login.auth.password')}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={method === 'key'}
-            className={method === 'key' ? 'toggle__btn is-active' : 'toggle__btn'}
-            onClick={() => setMethod('key')}
-          >
-            <KeyRound size={15} aria-hidden /> {t('login.auth.key')}
-          </button>
-        </div>
-      </fieldset>
-
-      {method === 'password' ? (
-        <label className="field">
-          <span>{t('login.password')}</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="off"
-            required
-          />
-        </label>
-      ) : (
-        <>
-          <label className="field">
-            <span>{t('login.keyFile')}</span>
-            <input type="file" onChange={(e) => void onKeyFile(e.target.files?.[0])} />
-          </label>
-          <label className="field">
-            <textarea
-              value={keyText}
-              onChange={(e) => setKeyText(e.target.value)}
-              placeholder={t('login.keyHint')}
-              rows={4}
-              spellCheck={false}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="username">{t('login.username')}</Label>
+            <Input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="off"
               required
             />
-          </label>
-          <label className="field">
-            <span>{t('login.passphrase')}</span>
-            <input
-              type="password"
-              value={passphrase}
-              onChange={(e) => setPassphrase(e.target.value)}
-              autoComplete="off"
-            />
-          </label>
-        </>
-      )}
+          </div>
 
-      {error && <p className="error" role="alert">{`${t('login.error')}: ${error}`}</p>}
+          <Tabs value={method} onValueChange={(v) => setMethod(v as AuthMethod)}>
+            <TabsList className="w-full">
+              <TabsTrigger value="password" className="flex-1">
+                <Lock className="size-4" aria-hidden /> {t('login.auth.password')}
+              </TabsTrigger>
+              <TabsTrigger value="key" className="flex-1">
+                <KeyRound className="size-4" aria-hidden /> {t('login.auth.key')}
+              </TabsTrigger>
+            </TabsList>
 
-      <button className="btn btn--primary" type="submit" disabled={busy}>
-        {busy ? t('login.connecting') : t('login.submit')}
-      </button>
-    </form>
+            <TabsContent value="password" className="mt-4 flex flex-col gap-2">
+              <Label htmlFor="password">{t('login.password')}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="off"
+                required={method === 'password'}
+              />
+            </TabsContent>
+
+            <TabsContent value="key" className="mt-4 flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="keyfile">{t('login.keyFile')}</Label>
+                <Input
+                  id="keyfile"
+                  type="file"
+                  onChange={(e) => void onKeyFile(e.target.files?.[0])}
+                />
+              </div>
+              <Textarea
+                value={keyText}
+                onChange={(e) => setKeyText(e.target.value)}
+                placeholder={t('login.keyHint')}
+                rows={4}
+                spellCheck={false}
+                className="font-mono text-xs"
+                required={method === 'key'}
+              />
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="passphrase">{t('login.passphrase')}</Label>
+                <Input
+                  id="passphrase"
+                  type="password"
+                  value={passphrase}
+                  onChange={(e) => setPassphrase(e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{`${t('login.error')}: ${error}`}</AlertDescription>
+            </Alert>
+          )}
+
+          <Button type="submit" disabled={busy} className="w-full">
+            {busy ? t('login.connecting') : t('login.submit')}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

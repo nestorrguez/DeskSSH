@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { detectLocale, makeTranslator } from './i18n';
-import { connect, disconnect, type ConnectInput, type SessionInfo } from './api/gateway';
-import { LoginForm } from './features/login/LoginForm';
-import { ConnectedView } from './features/connected/ConnectedView';
+import { detectLocale, makeTranslator } from '@/i18n';
+import { connect, disconnect, type ConnectInput, type SessionInfo } from '@/api/gateway';
+import { LoginForm } from '@/features/login/LoginForm';
+import { ConnectedView } from '@/features/connected/ConnectedView';
 
 export function App() {
   const t = useMemo(() => makeTranslator(detectLocale()), []);
@@ -25,8 +25,8 @@ export function App() {
   }
 
   return (
-    <main className="app">
-      <header className="app__brand">DeskSSH</header>
+    <main className="flex min-h-screen flex-col items-center gap-6 px-4 py-10">
+      <header className="text-sm font-bold tracking-wide text-muted-foreground">DeskSSH</header>
       {session ? (
         <ConnectedView t={t} session={session} onDisconnect={handleDisconnect} />
       ) : (
