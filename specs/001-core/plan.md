@@ -78,11 +78,28 @@ Resultado: **una sola base de lógica**, dos formas de entrega. Empezamos por we
 ### Adaptadores de SO
 - Interfaz uniforme: p. ej. `listDir`, `stat`, `listProcesses`, `listServices`,
   `serviceAction`, `systemMetrics`, etc.
-- Implementaciones por familia: Debian/Ubuntu, RHEL/Fedora, Arch (mínimo v1).
+- Cada **familia de SO** es un adaptador que implementa la interfaz uniforme.
+  **v1 cubre solo Debian/Ubuntu/Mint** (ver roadmap de hosts abajo).
 - Detección al conectar (`/etc/os-release`, `uname`), con un adaptador POSIX
-  genérico de respaldo.
+  genérico de respaldo para Unix-likes aún no soportados.
 - Preferir salidas legibles por máquina (`stat -c '%n|%s|%a|...'`, `ps -eo ...`,
   flags `--json` cuando existan) sobre parsear formato humano.
+
+#### Roadmap de hosts soportados
+
+El número de tier indica **prioridad de roadmap, NO dificultad** (ver columna
+*Esfuerzo*). Se prioriza Windows por popularidad pese a ser el más costoso.
+
+| Tier | Hosts | Esfuerzo | Notas |
+|------|-------|----------|-------|
+| **1** (v1) | Debian / Ubuntu / Mint | base | POSIX + GNU coreutils + systemd |
+| **2** | Windows | **alto** | No-POSIX: familia de adaptadores PowerShell propia. Sigue siendo agentless (PowerShell viene en el SO). Prioridad por popularidad, no por facilidad. |
+| **3** | Resto de Linux mainstream (RHEL/Fedora/Rocky, Arch, openSUSE) | bajo | Mismo paradigma que v1 (systemd + GNU); difieren sobre todo en el gestor de paquetes |
+| **4** | macOS, FreeBSD | medio | Userland BSD; init `launchd` (macOS) / `rc.d` (FreeBSD), no systemd |
+| **5** | Alpine | medio | `busybox` (flags recortados), OpenRC, musl |
+
+> Nota constitución: cuando llegue el Tier 2, habrá que **generalizar la redacción
+> "utilidades POSIX" del Art. 2** (sigue siendo agentless, pero ya no POSIX).
 
 ### Parsers y resiliencia
 - Cada parser recibe salida + código de salida; ante formato inesperado, devuelve

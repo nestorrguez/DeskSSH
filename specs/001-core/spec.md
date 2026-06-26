@@ -40,7 +40,8 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 
 - Streaming de escritorio o aplicaciones gráficas remotas (prohibido por la
   constitución).
-- Soporte para Windows como host remoto (objetivo a futuro, no v1).
+- Soporte como host remoto de Windows, macOS, *BSD y otras distros Linux: **fuera
+  de v1**, planificado en el roadmap de hosts (Tier 2+, ver `plan.md §4`).
 - Multiusuario/colaboración en tiempo real sobre la misma sesión.
 - Orquestación de flotas (gestión masiva de muchos servidores a la vez).
 - Tienda de apps / plugins de terceros (la arquitectura lo permitirá, pero no es v1).
@@ -130,8 +131,9 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 ## 7. Requisitos no funcionales
 
 - **NFR-Seguridad** — Cumplir el Artículo 4 de la constitución íntegramente.
-- **NFR-Portabilidad** — Funcionar en Debian/Ubuntu, RHEL/Fedora y Arch al menos,
-  vía adaptadores (Art. 6).
+- **NFR-Portabilidad** — v1 cubre **Debian/Ubuntu/Mint** como host remoto; el
+  soporte de más SO se incorpora por adaptadores (Art. 6) según el **roadmap de
+  hosts** (`plan.md §4`).
 - **NFR-Rendimiento** — Operaciones comunes (listar carpeta, refrescar monitor)
   perceptiblemente fluidas en latencias de red típicas; minimizar round trips.
 - **NFR-Resiliencia** — Ningún fallo de parseo/red tira la aplicación (Art. 7).
