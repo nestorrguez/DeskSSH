@@ -23,6 +23,23 @@ gestor de servicios…—. Detrás, cada clic ejecuta el comando equivalente (`l
 - **Transparente.** Siempre puedes ver el comando que hay detrás de cada acción.
 - **Open source 100%.**
 
+## Origen y motivación
+
+DeskSSH empezó como un proyecto en **ASP.NET con .NET 8**. A medida que crecía, me
+sentí rebasado por la enorme cantidad de comandos y casos que la herramienta podía
+llegar a cubrir. Empecé a revisar y mejorar el código apoyándome en IA, pero
+terminé tomando una decisión más radical: **reiniciar el proyecto desde cero**,
+también con ayuda de IA, para:
+
+- usar lenguajes y tecnologías **más aceptadas por la comunidad**, y
+- aprovechar la **facilidad de distribución de npm** y conseguir una adopción sencilla.
+
+Esta reescritura se desarrolla con **Spec-Driven Development**: las decisiones se
+documentan en `specs/` antes de escribir código.
+
+La razón de hacerlo **open source** es simple: quiero que DeskSSH llegue a ser una
+herramienta **realmente útil y popular**, construida y mejorada por la comunidad.
+
 ## Estado
 
 🚧 **En diseño.** El proyecto se desarrolla con **Spec-Driven Development**: ahora
