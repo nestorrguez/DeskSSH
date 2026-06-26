@@ -92,27 +92,35 @@ export function Window({
       >
         <Icon className="size-4 text-muted-foreground" aria-hidden />
         <span className="flex-1 truncate text-sm font-medium">{win.title}</span>
-        <button
-          className="grid size-6 place-items-center rounded hover:bg-accent"
-          onClick={onMinimize}
-          aria-label="Minimize"
+        {/* Controls: isolated from the header so a click never triggers the drag
+            (pointer capture) or the double-click-to-maximize behavior. */}
+        <div
+          className="flex items-center gap-1"
+          onPointerDown={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.stopPropagation()}
         >
-          <Minus className="size-3.5" aria-hidden />
-        </button>
-        <button
-          className="grid size-6 place-items-center rounded hover:bg-accent"
-          onClick={onToggleMaximize}
-          aria-label="Maximize"
-        >
-          <Square className="size-3" aria-hidden />
-        </button>
-        <button
-          className="grid size-6 place-items-center rounded hover:bg-destructive hover:text-white"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <X className="size-3.5" aria-hidden />
-        </button>
+          <button
+            className="grid size-6 place-items-center rounded hover:bg-accent"
+            onClick={onMinimize}
+            aria-label="Minimize"
+          >
+            <Minus className="size-3.5" aria-hidden />
+          </button>
+          <button
+            className="grid size-6 place-items-center rounded hover:bg-accent"
+            onClick={onToggleMaximize}
+            aria-label="Maximize"
+          >
+            <Square className="size-3" aria-hidden />
+          </button>
+          <button
+            className="grid size-6 place-items-center rounded hover:bg-destructive hover:text-white"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <X className="size-3.5" aria-hidden />
+          </button>
+        </div>
       </header>
 
       <div className="min-h-0 flex-1 overflow-auto">{children}</div>

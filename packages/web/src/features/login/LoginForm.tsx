@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { KeyRound, Lock, Server } from 'lucide-react';
+import { Check, ClipboardPaste, KeyRound, Lock, Server, Upload } from 'lucide-react';
 import type { Translator } from '@/i18n';
 import type { ConnectInput } from '@/api/gateway';
 import { Button } from '@/components/ui/button';
@@ -26,10 +26,14 @@ export function LoginForm({ t, busy, error, onSubmit }: LoginFormProps) {
   const [method, setMethod] = useState<AuthMethod>('password');
   const [password, setPassword] = useState('');
   const [keyText, setKeyText] = useState('');
+  const [keyMode, setKeyMode] = useState<'file' | 'paste'>('file');
+  const [keyFileName, setKeyFileName] = useState<string | null>(null);
   const [passphrase, setPassphrase] = useState('');
 
   async function onKeyFile(file: File | undefined): Promise<void> {
-    if (file) setKeyText(await file.text());
+    if (!file) return;
+    setKeyText(await file.text());
+    setKeyFileName(file.name);
   }
 
   function handleSubmit(event: FormEvent): void {
@@ -109,23 +113,58 @@ export function LoginForm({ t, busy, error, onSubmit }: LoginFormProps) {
             </TabsContent>
 
             <TabsContent value="key" className="mt-4 flex flex-col gap-3">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="keyfile">{t('login.keyFile')}</Label>
-                <Input
-                  id="keyfile"
-                  type="file"
-                  onChange={(e) => void onKeyFile(e.target.files?.[0])}
-                />
+              {/* Two clear actions: load a key file, or paste the key. The key's
+                  contents are never shown back; a loaded file shows a confirmation. */}
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant={keyMode === 'file' ? 'secondary' : 'outline'}
+                  className="gap-1.5"
+                  onClick={() => setKeyMode('file')}
+                >
+                  <Upload className="size-4" aria-hidden /> {t('login.key.loadFile')}
+                </Button>
+                <Button
+                  type="button"
+                  variant={keyMode === 'paste' ? 'secondary' : 'outline'}
+                  className="gap-1.5"
+                  onClick={() => setKeyMode('paste')}
+                >
+                  <ClipboardPaste className="size-4" aria-hidden /> {t('login.key.paste')}
+                </Button>
               </div>
-              <Textarea
-                value={keyText}
-                onChange={(e) => setKeyText(e.target.value)}
-                placeholder={t('login.keyHint')}
-                rows={4}
-                spellCheck={false}
-                className="font-mono text-xs"
-                required={method === 'key'}
-              />
+
+              {keyMode === 'file' ? (
+                <div className="flex flex-col gap-2">
+                  <Input
+                    id="keyfile"
+                    type="file"
+                    onChange={(e) => void onKeyFile(e.target.files?.[0])}
+                  />
+                  {keyText && (
+                    <p className="flex items-center gap-1.5 text-sm text-emerald-500">
+                      <Check className="size-4" aria-hidden />
+                      {keyFileName
+                        ? t('login.key.loaded', { name: keyFileName })
+                        : t('login.key.loadedGeneric')}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <Textarea
+                  value={keyText}
+                  onChange={(e) => {
+                    setKeyText(e.target.value);
+                    setKeyFileName(null);
+                  }}
+                  placeholder={t('login.keyHint')}
+                  rows={4}
+                  spellCheck={false}
+                  className="font-mono text-xs"
+                  required={method === 'key' && keyMode === 'paste'}
+                />
+              )}
+
               <div className="flex flex-col gap-2">
                 <Label htmlFor="passphrase">{t('login.passphrase')}</Label>
                 <Input
@@ -145,7 +184,11 @@ export function LoginForm({ t, busy, error, onSubmit }: LoginFormProps) {
             </Alert>
           )}
 
-          <Button type="submit" disabled={busy} className="w-full">
+          <Button
+            type="submit"
+            disabled={busy || (method === 'key' && !keyText)}
+            className="w-full"
+          >
             {busy ? t('login.connecting') : t('login.submit')}
           </Button>
         </form>

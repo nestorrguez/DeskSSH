@@ -1,4 +1,4 @@
-import { Folder, Info, TerminalSquare, Activity, FileText } from 'lucide-react';
+import { Folder, Info, TerminalSquare, Activity, FileText, Heart } from 'lucide-react';
 import type { Translator } from '@/i18n';
 import type { AppDefinition } from '../types';
 import { FilesApp } from './FilesApp';
@@ -6,6 +6,7 @@ import { MonitorApp } from './MonitorApp';
 import { SystemApp } from './SystemApp';
 import { StallmanApp } from './StallmanApp';
 import { TerminalApp } from './TerminalApp';
+import { CreditsApp } from './CreditsApp';
 
 /** The apps available in the launcher. */
 export function getApps(t: Translator): AppDefinition[] {
@@ -44,6 +45,13 @@ export function getApps(t: Translator): AppDefinition[] {
       icon: TerminalSquare,
       defaultSize: { w: 640, h: 420 },
       render: (ctx) => <TerminalApp {...ctx} />,
+    },
+    {
+      id: 'credits',
+      title: t('apps.credits'),
+      icon: Heart,
+      defaultSize: { w: 480, h: 520 },
+      render: (ctx) => <CreditsApp {...ctx} />,
     },
   ];
 }
