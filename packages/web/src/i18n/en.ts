@@ -16,6 +16,12 @@ export const en = {
   'login.submit': 'Connect',
   'login.connecting': 'Connecting…',
   'login.error': 'Could not connect',
+  'hostkey.title': 'Verify host authenticity',
+  'hostkey.body':
+    "The server's identity is not yet known. Make sure this fingerprint matches the server you trust before continuing.",
+  'hostkey.fingerprint': 'Fingerprint',
+  'hostkey.cancel': 'Cancel',
+  'hostkey.confirm': 'Trust and connect',
   'connected.title': 'Connected',
   'connected.os': 'Operating system',
   'connected.home': 'Home',

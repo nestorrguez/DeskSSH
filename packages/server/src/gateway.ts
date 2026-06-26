@@ -5,7 +5,13 @@
 
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'node:http';
 import { SessionManager, toSessionInfo } from './session-manager.js';
-import { openSshSession, type SessionOpener } from './opener.js';
+import {
+  createSshOpener,
+  HostKeyUnknownError,
+  HostKeyMismatchError,
+  type SessionOpener,
+} from './opener.js';
+import { FileKnownHosts } from './known-hosts.js';
 
 const MAX_BODY_BYTES = 1_000_000; // PEM keys are small; cap to avoid abuse.
 
@@ -69,7 +75,7 @@ function asString(obj: Record<string, unknown>, key: string): string {
 /** Build (but do not start) the gateway HTTP server. */
 export function createGateway(deps: GatewayDeps = {}): Server {
   const manager = deps.manager ?? new SessionManager();
-  const opener = deps.opener ?? openSshSession;
+  const opener = deps.opener ?? createSshOpener(new FileKnownHosts());
 
   return createServer((req, res) => {
     handle(req, res, manager, opener).catch((err: unknown) => {
@@ -94,15 +100,35 @@ async function handle(
   if (route === 'POST /api/connect') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;
     const auth = parseAuth(body['auth']);
-    const entry = manager.add(
-      await opener({
-        host: asString(body, 'host'),
-        port: body['port'] === undefined ? undefined : Number(body['port']),
-        username: asString(body, 'username'),
-        auth,
-      }),
-    );
-    return sendJson(res, 200, toSessionInfo(entry));
+    const request = {
+      host: asString(body, 'host'),
+      port: body['port'] === undefined ? undefined : Number(body['port']),
+      username: asString(body, 'username'),
+      auth,
+      ...(typeof body['trustFingerprint'] === 'string'
+        ? { trustFingerprint: body['trustFingerprint'] }
+        : {}),
+    };
+    try {
+      const entry = manager.add(await opener(request));
+      return sendJson(res, 200, { status: 'connected', ...toSessionInfo(entry) });
+    } catch (err) {
+      if (err instanceof HostKeyUnknownError) {
+        return sendJson(res, 200, {
+          status: 'verify-host-key',
+          fingerprint: err.fingerprint,
+          algorithm: err.algorithm,
+        });
+      }
+      if (err instanceof HostKeyMismatchError) {
+        return sendJson(res, 409, {
+          error: err.message,
+          fingerprint: err.fingerprint,
+          expected: err.expected,
+        });
+      }
+      throw err;
+    }
   }
 
   if (route === 'POST /api/disconnect') {

@@ -11,7 +11,14 @@ export {
   type SessionInfo,
   type SessionEntry,
 } from './session-manager.js';
-export { openSshSession, type ConnectRequest, type SessionOpener } from './opener.js';
+export {
+  createSshOpener,
+  HostKeyUnknownError,
+  HostKeyMismatchError,
+  type ConnectRequest,
+  type SessionOpener,
+} from './opener.js';
+export { InMemoryKnownHosts, FileKnownHosts, type KnownHostsStore } from './known-hosts.js';
 
 /** Start the gateway on the given port (defaults to PORT env or 8717). */
 export function startGateway(port = Number(process.env['PORT'] ?? 8717)): void {

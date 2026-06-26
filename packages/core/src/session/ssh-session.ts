@@ -12,6 +12,18 @@ function fingerprint(key: Buffer): string {
   return `SHA256:${createHash('sha256').update(key).digest('base64').replace(/=+$/, '')}`;
 }
 
+/**
+ * Read the algorithm name from an SSH host key blob. The blob starts with an
+ * SSH "string": a uint32 big-endian length followed by the ASCII name (e.g.
+ * "ssh-ed25519", "ecdsa-sha2-nistp256"). Returns '' if the buffer is malformed.
+ */
+export function keyAlgorithm(key: Buffer): string {
+  if (key.length < 4) return '';
+  const len = key.readUInt32BE(0);
+  if (len <= 0 || key.length < 4 + len) return '';
+  return key.subarray(4, 4 + len).toString('ascii');
+}
+
 export class SshSession implements CommandExecutor {
   private readonly client = new Client();
   private currentState: SessionState = 'idle';
@@ -47,7 +59,7 @@ export class SshSession implements CommandExecutor {
       readyTimeout: timeoutMs,
       hostVerifier: (key: Buffer, verify: (ok: boolean) => void) => {
         const decide = verifyHostKey
-          ? verifyHostKey({ algorithm: '', fingerprint: fingerprint(key) })
+          ? verifyHostKey({ algorithm: keyAlgorithm(key), fingerprint: fingerprint(key) })
           : false;
         Promise.resolve(decide)
           .then(verify)

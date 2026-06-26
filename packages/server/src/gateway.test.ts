@@ -69,6 +69,7 @@ describe('gateway', () => {
       auth: { kind: 'password', password: 'hunter2' },
     });
     expect(status).toBe(200);
+    expect(json.status).toBe('connected');
     expect(json.sessionId).toMatch(/[0-9a-f-]{36}/);
     expect(json.host).toBe('me@example.com');
     expect(json.os.family).toBe('debian');

@@ -14,6 +14,8 @@ export interface ConnectInput {
   port?: number;
   username: string;
   auth: AuthInput;
+  /** A fingerprint the user has just confirmed (second attempt after TOFU). */
+  trustFingerprint?: string;
 }
 
 export interface SessionInfo {
@@ -22,6 +24,11 @@ export interface SessionInfo {
   home: string;
   os: { family: string; prettyName?: string };
 }
+
+/** Result of a connect attempt: either a session, or a host key to confirm. */
+export type ConnectResult =
+  | ({ status: 'connected' } & SessionInfo)
+  | { status: 'verify-host-key'; fingerprint: string; algorithm: string };
 
 export interface ListDirResponse {
   path: string;
@@ -46,8 +53,8 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return data as T;
 }
 
-export function connect(input: ConnectInput): Promise<SessionInfo> {
-  return post<SessionInfo>('/api/connect', input);
+export function connect(input: ConnectInput): Promise<ConnectResult> {
+  return post<ConnectResult>('/api/connect', input);
 }
 
 export function listDir(sessionId: string, path?: string): Promise<ListDirResponse> {

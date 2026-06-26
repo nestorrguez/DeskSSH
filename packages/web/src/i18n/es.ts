@@ -17,6 +17,12 @@ export const es: Record<MessageKey, string> = {
   'login.submit': 'Conectar',
   'login.connecting': 'Conectando…',
   'login.error': 'No se pudo conectar',
+  'hostkey.title': 'Verificar la autenticidad del servidor',
+  'hostkey.body':
+    'La identidad del servidor aún no se conoce. Asegúrate de que esta huella coincide con el servidor en el que confías antes de continuar.',
+  'hostkey.fingerprint': 'Huella',
+  'hostkey.cancel': 'Cancelar',
+  'hostkey.confirm': 'Confiar y conectar',
   'connected.title': 'Conectado',
   'connected.os': 'Sistema operativo',
   'connected.home': 'Inicio',
