@@ -54,34 +54,36 @@ a minimal CLI (no web UI yet).
 
 ### Session layer
 
-- [ ] **M1.1** `SshSession` over `ssh2`: connect with **private key (PEM/OpenSSH/
+- [x] **M1.1** `SshSession` over `ssh2`: connect with **private key (PEM/OpenSSH/
       PKCS#8, optional passphrase)** and **password**; never persist secrets. → FR-002,
       FR-005, Art. 4
-- [ ] **M1.2** Session lifecycle + state (connecting / alive / dropped / error) with
+- [x] **M1.2** Session lifecycle + state (connecting / alive / dropped / error) with
       events. → FR-003
-- [ ] **M1.3** Channels: `exec` (run command), **PTY** (interactive shell), **SFTP**
-      (file ops); SFTP-missing → fall back to `exec`. → FR-030/031, Art. 7
-- [ ] **M1.4** SSH host key verification + `known_hosts` policy. → plan §5, Art. 4
+- [x] **M1.3** Channels: `exec` (run command), **PTY** (interactive shell), **SFTP**
+      (`shell()`/`sftp()` exposed). v1 file capabilities use exec+base64; wiring SFTP
+      into the file manager is M2. → FR-030/031, Art. 7
+- [x] **M1.4** SSH host key verification via `verifyHostKey` hook (secure default:
+      reject if absent). Persisted `known_hosts` policy deferred to M2. → plan §5, Art. 4
 
 ### Capability contract (IR)
 
-- [ ] **M1.5** Define the typed contract + core types (`FileEntry`, `Process`,
+- [x] **M1.5** Define the typed contract + core types (`FileEntry`, `Process`,
       `ServiceState`, `SystemMetrics`, capability-unsupported result). → plan §4
-- [ ] **M1.6** Single **execution point**: every command flows through it and is
+- [x] **M1.6** Single **execution point**: every command flows through it and is
       logged `{command, host, timestamp, exitCode}` (transparency + audit). → FR-013,
       Art. 3
-- [ ] **M1.7** Parser harness: parse → typed result, with **raw-output fallback**
+- [x] **M1.7** Parser harness: parse → typed result, with **raw-output fallback**
       that never throws. → FR-091, Art. 7
 
 ### Adapter layer
 
-- [ ] **M1.8** OS detection on connect (`/etc/os-release`, `uname`) + adapter
+- [x] **M1.8** OS detection on connect (`/etc/os-release`, `uname`) + adapter
       selection, with generic POSIX fallback. → FR-004, Art. 6
-- [ ] **M1.9** **Debian/Ubuntu adapter** (Tier 1) implementing the v1-needed
+- [x] **M1.9** **Debian/Ubuntu adapter** (Tier 1) implementing the v1-needed
       capabilities (`listDir`, `stat`, `readFile`, `writeFile`, `systemMetrics`),
       preferring machine-readable output. → plan §4, Art. 6/10
-- [ ] **M1.10** Minimal CLI/harness to exercise the core against a real host
-      (manual and automated tests). → plan §6 ("demonstrable")
+- [x] **M1.10** Minimal CLI/harness to exercise the core against a real host
+      (`packages/harness`; 25 automated tests + manual run). → plan §6 ("demonstrable")
 
 **M1 done when:** connecting to a real Debian/Ubuntu host, listing a directory and
 reading system metrics return typed results, every command is in the transparency

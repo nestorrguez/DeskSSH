@@ -1,0 +1,19 @@
+{
+  "name": "@deskssh/harness",
+  "version": "0.0.0",
+  "description": "DeskSSH M1 dev harness: exercise the core against a real SSH host",
+  "license": "AGPL-3.0-or-later",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "deskssh-harness": "dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/main.js",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@deskssh/core": "workspace:*"
+  }
+}
