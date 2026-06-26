@@ -1,0 +1,37 @@
+{
+  "name": "deskssh",
+  "version": "0.0.1",
+  "description": "A graphical desktop over plain SSH. Early development — not yet functional.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "bin": {
+    "deskssh": "bin/deskssh.js"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "keywords": [
+    "ssh",
+    "sftp",
+    "gui",
+    "desktop",
+    "sysadmin",
+    "devops",
+    "agentless"
+  ],
+  "homepage": "https://github.com/nestorrguez/DeskSSH",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nestorrguez/DeskSSH.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nestorrguez/DeskSSH/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "true"
+  }
+}

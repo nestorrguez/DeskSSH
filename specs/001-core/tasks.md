@@ -26,19 +26,20 @@
 
 Goal: an empty but coherent monorepo that builds, lints, tests and publishes.
 
-- [ ] **M0.1** Initialize pnpm-workspace monorepo with packages `core`, `server`,
+- [x] **M0.1** Initialize pnpm-workspace monorepo with packages `core`, `server`,
       `web`. → plan §2
-- [ ] **M0.2** Root TypeScript config (strict) shared across packages.
-- [ ] **M0.3** Linting/formatting (ESLint + Prettier) and a `test` runner
+- [x] **M0.2** Root TypeScript config (strict) shared across packages.
+- [x] **M0.3** Linting/formatting (ESLint + Prettier) and a `test` runner
       (Vitest) wired at the root.
-- [ ] **M0.4** Basic CI (GitHub Actions): install, lint, typecheck, test, build on
+- [x] **M0.4** Basic CI (GitHub Actions): install, lint, typecheck, test, build on
       push/PR. → plan §6
-- [ ] **M0.5** Add `CONTRIBUTING.md` (SDD flow, English-only repo, how to propose
+- [x] **M0.5** Add `CONTRIBUTING.md` (SDD flow, English-only repo, how to propose
       via `specs/`). `LICENSE` already present. → Art. 9
-- [ ] **M0.6** Minimal i18n scaffolding decision/setup so strings are externalized
+- [x] **M0.6** Minimal i18n scaffolding decision/setup so strings are externalized
       from day 1 (EN + ES catalogs stub). → NFR-i18n
 - [ ] **M0.7** Publish `deskssh` `0.0.1` placeholder to npm (claims the name;
-      `AGPL-3.0-or-later`, public access). → vision (distribution)
+      `AGPL-3.0-or-later`, public access). **Needs maintainer npm login.** → vision
+      (distribution)
 
 **M0 done when:** `pnpm install && pnpm -r build && pnpm -r test` pass in CI and the
 `deskssh` name is reserved on npm.
