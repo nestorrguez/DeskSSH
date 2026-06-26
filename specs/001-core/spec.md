@@ -98,6 +98,23 @@ streaming, y con **transparencia**: siempre puedes ver el comando detrás del cl
 - **FR-022** Ver propiedades (tamaño, permisos, propietario, fechas).
 - **FR-023** Subir y descargar archivos entre el equipo del usuario y el host.
 - **FR-024** `[NECESITA DECISIÓN]` ¿drag & drop en v1 o en una iteración posterior?
+- **FR-025** Al abrir un archivo, el usuario elige entre dos **lugares de
+  ejecución**:
+  - **(A) En DeskSSH** — *Abrir* (app DeskSSH por defecto para ese tipo) o *Abrir
+    con* (elegir entre las apps/visores de DeskSSH). El archivo se lee vía
+    `readFile` y se renderiza en la GUI; **no se ejecuta nada en el remoto**
+    (Art. 10). Requiere que exista un *handler* DeskSSH para ese tipo; si no, se
+    ofrece la opción (B).
+  - **(B) En el cliente** — *Abrir en el cliente* (se descarga por SFTP, en
+    streaming, a la **máquina local del usuario** y se abre con el programa por
+    defecto de su SO) o *Descargar* (solo guardar en local).
+
+  Nota de vocabulario: **"el cliente" = la máquina local del usuario** (su
+  navegador/SO en el modelo web), no el servidor DeskSSH.
+  `[NECESITA DECISIÓN]` En el modo **web**, un navegador no puede forzar la
+  apertura con el programa por defecto del SO: ¿"Abrir en el cliente" se resuelve
+  como **descarga simple**, como **apertura inline** según el tipo, o ambas? (En el
+  build de escritorio sí es apertura plena con el SO.)
 
 ### App: Terminal
 - **FR-030** Terminal interactiva real (PTY sobre SSH) con redimensionado.

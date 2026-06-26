@@ -145,6 +145,22 @@ El número de tier indica **prioridad de roadmap, NO dificultad** (ver columna
 > Nota constitución: cuando llegue el Tier 2, habrá que **generalizar la redacción
 > "utilidades POSIX" del Art. 2** (sigue siendo agentless, pero ya no POSIX).
 
+### Apertura de archivos: handlers y rutas (FR-025)
+
+- **Registro de *handlers* por tipo de archivo:** cada app DeskSSH declara qué
+  tipos sabe abrir. Es la base de "Abrir" (handler por defecto) y "Abrir con"
+  (elegir handler), y la semilla de extensibilidad para futuras apps.
+- **Dos rutas de apertura:**
+  - **(A) Render en DeskSSH:** `readFile` del contrato → se pinta en un handler de
+    la GUI. Con **límite de tamaño**/aviso (Art. 8); sin handler para el tipo →
+    se ofrece la ruta B.
+  - **(B) *Handoff* al cliente:** descarga por **SFTP en streaming** (no cargar en
+    memoria) a la máquina local del usuario.
+- **Limitación web vs desktop (`[NECESITA DECISIÓN]`):** en **desktop**
+  (Tauri/Electron) se descarga y se invoca al SO para abrir con el programa por
+  defecto; en **web**, el navegador solo puede descargar (e, inline según el tipo),
+  no forzar la app por defecto del SO.
+
 ### Parsers y resiliencia
 - Cada parser recibe salida + código de salida; ante formato inesperado, devuelve
   un resultado "degradado" con la salida cruda (Art. 7), nunca lanza y rompe.
