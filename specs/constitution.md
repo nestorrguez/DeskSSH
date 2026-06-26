@@ -48,7 +48,8 @@ accessible.
 
 The logic (SSH sessions, OS adapters, parsers, "app" definitions) lives in a **core
 independent of presentation**. This allows serving a web app and, with the same
-core, packaging a desktop app. No business rule lives in UI components.
+core, delivering it either hosted or self-hosted (npm). No business rule lives in
+UI components.
 
 ## Article 6 — Portability through adapters
 

@@ -6,27 +6,27 @@ starting point, not dogma; open decisions are marked `[NEEDS DECISION]`.
 
 ---
 
-## 1. Resolving the web vs desktop conflict
+## 1. Delivery model (one web app, two distributions)
 
-Decision of record: **agnostic core + web-first delivery; desktop as later
-packaging.**
+Decision of record: **agnostic core + web-first; a single web app delivered two
+ways — hosted, or self-hosted via npm. No native desktop wrapper.**
 
 Reasons:
 
 - The user wants "anyone to be able to access it on the network" → favors web.
-- The **browser cannot open raw SSH/TCP connections**, so in the web model the SSH
-  session must live in a **backend** (gateway). That forces, anyway, a core
-  separable from the UI (Art. 5).
-- Once the core is independent, the **desktop** is simply packaging that same core
-  locally (e.g. Tauri/Electron starting the backend on `localhost`), with no logic
-  rewrite.
+- The **browser cannot open raw SSH/TCP connections**, so the SSH session must live
+  in a **backend** (gateway). That forces, anyway, a core separable from the UI
+  (Art. 5).
+- The offline/LAN need is met by **self-hosting the same web app via npm** (run it
+  locally, open it in the browser), not by a native desktop build. Local users
+  install from npm; there is **no Tauri/Electron app**.
 
-Result: **a single logic base**, two delivery forms. We start with web. **Decision
-confirmed (2026-06-25).**
+Result: **a single logic base and one web UI**, distributed as **hosted** or
+**self-hosted (npm)**. **Confirmed (2026-06-25; native desktop dropped 2026-06-26).**
 
 ```
 ┌────────────────────────────┐        ┌───────────────────────────────┐
-│  Frontend (web / desktop)  │  WS/   │  Backend (DeskSSH gateway)    │
+│  Frontend (browser UI)     │  WS/   │  Backend (DeskSSH gateway)    │
 │  desktop shell + UI        │ <────> │  SSH sessions + API           │
 │  React + TS                │  HTTP  │  uses the CORE                │
 └────────────────────────────┘        │   ┌────────────────────────┐  │   SSH
@@ -53,7 +53,8 @@ confirmed (2026-06-25).**
    isolates sessions between users.
 3. **`web`** (frontend): desktop shell (windows, taskbar, launcher) and each app's
    views. Talks to `server`, never to SSH directly.
-4. **`desktop`** (later): packages `server` + `web` into a local app.
+4. **Distribution**: the same `server` + `web` runs **hosted** or **self-hosted via
+   npm** (local/LAN). No separate native app.
 
 ## 3. Proposed stack (v1)
 
@@ -78,8 +79,8 @@ details (styling framework, icon set) still open — see §8. Alternatives noted
     attribution), chosen for its clean, uniform stroke style fitting the
     accessibility-first UI. (Considered: Tabler/Phosphor/Heroicons MIT, Material
     Symbols Apache-2.0, Font Awesome Free CC BY; FA Pro proprietary — avoided.)
-- **Desktop (future):** **Tauri** preferred (lightweight, Rust) over Electron,
-  unless reusing the `server`'s Node inside the binary is desired → then Electron.
+- **Distribution:** published to **npm** so local/LAN users self-host the web app;
+  a hosted deployment serves internet-open servers. No native desktop build.
 
 ## 4. Core design
 
@@ -163,10 +164,10 @@ column). Windows is prioritized for popularity despite being the most costly.
     offered.
   - **(B) *Handoff* to the client:** download over **streaming SFTP** (don't load
     into memory) to the user's local machine.
-- **Web vs desktop limitation (`[NEEDS DECISION]`):** on **desktop**
-  (Tauri/Electron) it downloads and invokes the OS to open with the default program;
-  on **web**, the browser can only download (and inline depending on type), not force
-  the OS's default app.
+- **Browser limitation (`[NEEDS DECISION]`):** DeskSSH always runs in a browser
+  (hosted or self-hosted), so "Open on the client" can only **download** (and inline
+  depending on type); it cannot force the OS's default app. Resolve as plain
+  download, inline-by-type, or both.
 
 ### Parsers and resilience
 - Each parser receives output + exit code; on unexpected format it returns a
@@ -206,7 +207,8 @@ services, log viewer and packages are **post-v1**.
 - **── 🚀 v1 release ──**
 - **Post-v1 (admin apps):** Processes + Services + Log viewer + Packages.
 - **Post-v1 (hosts):** go down the tier roadmap (Windows → rest of Linux → …).
-- **Post-v1 (desktop):** Tauri/Electron packaging of the same core.
+- **Post-v1 (hosted):** a hosted web deployment for internet-open servers
+  (self-hosted npm is available from v1).
 
 ## 7. Risks and mitigations
 
@@ -229,7 +231,7 @@ services, log viewer and packages are **post-v1**.
 - **Core stack: TypeScript + Node + `ssh2` + React.**
 - **UI: Tailwind CSS + Radix UI (via shadcn/ui)** — all MIT.
 - **Icon set: Lucide** (ISC — AGPL-compatible, no attribution required).
+- **No native desktop app:** local/LAN use = self-hosted **npm** web app.
+- **v1 credentials: not persisted** — asked per session (FR-005).
 
-**Open:**
-1. Credential store.
-2. Tauri vs Electron for desktop packaging (post-v1).
+**Open:** product-level decisions tracked in spec §9 (`ssh-agent`, i18n scope).

@@ -91,8 +91,9 @@ into commands executed on the host. No agents, no streaming, and with
 - **FR-003** Connect/disconnect; show session state (connecting, alive, dropped,
   error).
 - **FR-004** Detect the host's OS family to choose the adapter (Art. 6).
-- **FR-005** Never persist secrets in plain text (Art. 4). `[NEEDS DECISION]`
-  credential store (OS keychain, local encryption, no persistence).
+- **FR-005** Never persist secrets in plain text (Art. 4). **v1: do not persist
+  credentials** — entered per session and kept only in memory while connected; an
+  encrypted store (OS keychain / local encryption) may come post-v1.
 
 ### Desktop shell
 - **FR-010** Show a desktop with movable/resizable windows and a taskbar.
@@ -107,7 +108,8 @@ into commands executed on the host. No agents, no streaming, and with
   confirmation, Art. 4).
 - **FR-022** View properties (size, permissions, owner, dates).
 - **FR-023** Upload and download files between the user's machine and the host.
-- **FR-024** `[NEEDS DECISION]` drag & drop in v1 or a later iteration?
+- **FR-024** Drag & drop in the file manager — **post-v1** (not in the focused v1
+  cut).
 - **FR-025** When opening a file, the user chooses between two **execution
   locations**:
   - **(A) In DeskSSH** — *Open* (default DeskSSH app for that type) or *Open with*
@@ -120,10 +122,10 @@ into commands executed on the host. No agents, no streaming, and with
 
   Vocabulary note: **"the client" = the user's local machine** (their browser/OS in
   the web model), not the DeskSSH server.
-  `[NEEDS DECISION]` In **web** mode, a browser cannot force opening with the OS's
-  default program: does "Open on the client" resolve as a **plain download**, as
-  **inline opening** depending on type, or both? (In the desktop build it is full
-  opening with the OS.)
+  Since DeskSSH always runs in a browser (hosted or self-hosted npm), it cannot
+  force opening with the OS's default program. `[NEEDS DECISION]` does "Open on the
+  client" resolve as a **plain download**, as **inline opening** depending on type,
+  or both?
 
 ### App: Terminal
 - **FR-030** Real interactive terminal (PTY over SSH) with resizing.
@@ -179,11 +181,13 @@ into commands executed on the host. No agents, no streaming, and with
 
 1. ~~Open source license~~ → **Resolved (2026-06-25): AGPL-3.0-or-later** (see
    `constitution.md` and `LICENSE`).
-2. ~~Confirm web-first~~ → **Resolved (2026-06-25): web-first** with an agnostic
-   core; desktop as later packaging (see `plan.md §1`).
+2. ~~Confirm web-first~~ → **Resolved: web-first** (2026-06-25), one web app
+   delivered hosted or self-hosted via npm; **no native desktop** (2026-06-26). See
+   `plan.md §1`.
 3. `ssh-agent`/passphrase support in v1 (FR-002).
-4. Credential store: OS keychain, local encryption or no persistence (FR-005).
-5. Drag & drop in the file manager in v1 or later (FR-024).
+4. ~~Credential store~~ → **Resolved (2026-06-26): v1 does not persist** (ask each
+   session); encrypted store post-v1 (FR-005).
+5. ~~Drag & drop~~ → **Resolved (2026-06-26): post-v1** (FR-024).
 6. i18n scope in v1 (NFR-Accessibility/i18n).
 7. ~~v1 app set~~ → **Resolved (2026-06-25):** focused cut = Connection/hosts,
    Shell, File manager, Editor, Terminal and System monitor; the rest *(post-v1)*
