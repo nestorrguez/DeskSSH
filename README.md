@@ -45,10 +45,11 @@ herramienta **realmente útil y popular**, construida y mejorada por la comunida
 🚧 **En diseño.** El proyecto se desarrolla con **Spec-Driven Development**: ahora
 mismo existe la especificación; el código llega después. Empieza por:
 
+- [`specs/vision.md`](specs/vision.md) — el porqué y el hacia dónde (la visión).
 - [`specs/constitution.md`](specs/constitution.md) — principios del proyecto.
 - [`specs/001-core/spec.md`](specs/001-core/spec.md) — qué hace DeskSSH.
 - [`specs/001-core/plan.md`](specs/001-core/plan.md) — cómo se construirá.
-- [`CLAUDE.md`](CLAUDE.md) — guía del repositorio y del flujo de trabajo.
+- [`specs/glossary.md`](specs/glossary.md) — vocabulario del dominio.
 
 ## Cómo contribuir
 
