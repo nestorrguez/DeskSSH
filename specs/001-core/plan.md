@@ -162,19 +162,9 @@ client**:
 
 #### Supported-host roadmap
 
-The tier number indicates **roadmap priority, NOT difficulty** (see the _Effort_
-column). Windows is prioritized for popularity despite being the most costly.
-
-| Tier       | Hosts                                                        | Effort   | Notes                                                                                                                               |
-| ---------- | ------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **1** (v1) | Debian / Ubuntu / Mint                                       | base     | POSIX + GNU coreutils + systemd                                                                                                     |
-| **2**      | Windows                                                      | **high** | Non-POSIX: its own PowerShell adapter family. Still agentless (PowerShell ships with the OS). Prioritized for popularity, not ease. |
-| **3**      | Rest of mainstream Linux (RHEL/Fedora/Rocky, Arch, openSUSE) | low      | Same paradigm as v1 (systemd + GNU); differ mainly in the package manager                                                           |
-| **4**      | macOS, FreeBSD                                               | medium   | BSD userland; init `launchd` (macOS) / `rc.d` (FreeBSD), not systemd                                                                |
-| **5**      | Alpine                                                       | medium   | `busybox` (trimmed flags), OpenRC, musl                                                                                             |
-
-> Constitution note: when Tier 2 arrives, the **"POSIX utilities" wording of Art. 2
-> will need generalizing** (still agentless, but no longer POSIX).
+**v1 ships Tier 1 only: Debian / Ubuntu / Mint** (POSIX + GNU coreutils + systemd).
+The multi-OS reach (Windows, other Linux, macOS/FreeBSD, Alpine), prioritized by
+popularity rather than difficulty, is tracked in the **private roadmap**.
 
 ### File opening: handlers and routes (FR-025)
 
@@ -245,10 +235,8 @@ packages are **post-v1**.
   file/paste UI, Credits panel; image + PDF viewers; file-manager overhaul
   (mutations, own context menu, clipboard, open-in-terminal, download); Documents
   editor; Stallman → Monaco. All on the 0.1.x line (see `Observaciones/`).
-- **Post-v1 (admin apps):** Processes + Services + Log viewer + Packages.
-- **Post-v1 (hosts):** go down the tier roadmap (Windows → rest of Linux → …).
-- **Post-v1 (hosted):** a hosted web deployment for internet-open servers
-  (self-hosted npm is available from v1).
+- **Post-v1:** admin apps, multi-OS host tiers, hosted deployment and the
+  credential store are tracked in the **private roadmap**.
 
 ## 7. Risks and mitigations
 

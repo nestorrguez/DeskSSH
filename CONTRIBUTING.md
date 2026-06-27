@@ -9,8 +9,9 @@ the way they are.
 
 - **English only** in the repository (code, comments, docs, commit messages, specs).
   The repo is public and international.
-- **Read the specs first.** Start with [`specs/vision.md`](specs/vision.md) and
-  [`specs/constitution.md`](specs/constitution.md). The constitution lists
+- **Read the specs first.** Start with
+  [`specs/constitution.md`](specs/constitution.md) and
+  [`specs/001-core/spec.md`](specs/001-core/spec.md). The constitution lists
   **non-negotiable** principles — if a change conflicts with one, it won't be
   accepted unless the constitution is explicitly amended.
 - **Spec before code.** No behavior change lands without the spec being updated
@@ -22,7 +23,7 @@ the way they are.
 ## Project layout
 
 ```
-specs/                  Source of truth (vision, constitution, glossary, 001-core/*)
+specs/                  Source of truth (constitution, glossary, 001-core/*)
 packages/
   core/                 Frontend-agnostic core (SSH sessions, adapters, contract)
   server/               Web gateway (keeps SSH sessions, exposes the API)

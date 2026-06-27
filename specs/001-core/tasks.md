@@ -39,7 +39,7 @@ Goal: an empty but coherent monorepo that builds, lints, tests and publishes.
       from day 1 (EN + ES catalogs stub). → NFR-i18n
 - [x] **M0.7** Publish `deskssh` to npm (name claimed; `AGPL-3.0-or-later`, public
       access). Shipped as an installable app (`npx deskssh`), now on the 0.1.x line.
-      → vision (distribution)
+      → distribution
 
 **M0 done when:** `pnpm install && pnpm -r build && pnpm -r test` pass in CI and the
 `deskssh` name is reserved on npm.
@@ -131,16 +131,9 @@ From the `Observaciones/` usage diary. **Strict spec-first applies from now on**
 - [x] **M4.8** **Stallman → Monaco** code editor with syntax highlighting by file
       type (lazy-loaded). → FR-072 — `0.1.6`
 
-## Backlog (next, spec-first)
+## Next / post-v1
 
-- [ ] **B.1** Unify the parallel openers into a single `openFile(path)` + handler
-      registry (FR-025; removes per-type duplication — see `plan.md §4`).
-- [ ] **B.2** Editor **unsaved-changes guard on window close** (FR-071 is specified
-      but only a dirty indicator ships today).
-- [ ] **B.3** File **upload** from the client (FR-023; download already ships).
-
-## Post-v1 _(pointer)_
-
-Admin apps (Processes/Services/Logs/Packages), host tiers (Windows → rest of Linux →
-macOS/FreeBSD → Alpine), encrypted credential store, ssh-agent, drag & drop, hosted
-deployment. See `plan.md §6` and `vision.md`.
+The near-term technical backlog (handler-registry unification, FR-071 close-guard,
+file upload) and the post-v1 roadmap (admin apps, host tiers, credential store,
+hosted deployment) are tracked in the **private roadmap**, not here. This file lists
+only shipped/in-progress work.

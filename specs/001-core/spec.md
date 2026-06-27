@@ -40,8 +40,7 @@ into commands executed on the host. No agents, no streaming, and with
 
 - Desktop streaming or remote graphical applications (forbidden by the
   constitution).
-- Windows, macOS, \*BSD and other Linux distros as remote host: **out of v1**,
-  planned in the host roadmap (Tier 2+, see `plan.md §4`).
+- Windows, macOS, \*BSD and other Linux distros as remote host: **out of v1**.
 - Multi-user / real-time collaboration over the same session.
 - Fleet orchestration (managing many servers at once).
 - Third-party app/plugin store (the architecture will allow it, but not in v1).
@@ -72,17 +71,15 @@ into commands executed on the host. No agents, no streaming, and with
 3. They open the **file manager**, browse, copy a file (seeing the confirmation
    and, optionally, the command).
 4. They open the **system monitor** and check CPU/memory/disk at a glance.
-   (Service/process management arrives _post-v1_.)
 5. They open a real **terminal** for something specific. They close the session.
 
 ## 6. Functional requirements
 
 > **v1 app scope (focused cut):** Connection/hosts, Desktop shell, File manager,
 > **Editors** (Stallman = code, Documents = rich text), Terminal, **Image/PDF
-> viewers** and **System monitor**. The apps marked _(post-v1)_ below —Processes,
-> Services, Log viewer, Packages— are specified here but implemented after v1 (see
-> `plan.md §6`). _(The second editor and the viewers were added from session-2
-> usability feedback, 2026-06-27; see `Observaciones/`.)_
+> viewers** and **System monitor**. This document specifies **only what ships**;
+> post-v1 apps (Processes, Services, Log viewer, Packages) and their FRs live in the
+> private roadmap, and graduate back here when built.
 
 ### Connection and hosts
 
@@ -146,20 +143,9 @@ into commands executed on the host. No agents, no streaming, and with
 - **FR-032** Start the shell in a given directory when opened from elsewhere
   (e.g. the file manager's "Open in terminal", FR-027).
 
-### App: Processes / Task manager _(post-v1)_
-
-- **FR-040** List processes (CPU/mem usage, PID, user, command).
-- **FR-041** Terminate a process (mandatory confirmation).
-
 ### App: System monitor
 
 - **FR-050** Show CPU, memory, disk and uptime, with periodic refresh.
-
-### App: Service manager _(post-v1)_
-
-- **FR-060** List services (systemd first) and their state.
-- **FR-061** Start, stop and restart services (mandatory confirmation).
-- **FR-062** View a service's recent state/log.
 
 ### App: Editors (code + documents)
 
@@ -185,10 +171,6 @@ The GUI is synthesised on the client (Art. 10): viewers read the file bytes via
   with a fit / actual-size toggle.
 - **FR-101** **PDF viewer:** display PDF files with page navigation and zoom.
 
-### App: Log viewer _(post-v1)_
-
-- **FR-080** View and follow (`tail -f`/`journalctl -f`) logs in streaming.
-
 ### Cross-cutting
 
 - **FR-090** Every destructive action asks for explicit confirmation (Art. 4).
@@ -200,8 +182,8 @@ The GUI is synthesised on the client (Art. 10): viewers read the file bytes via
 
 - **NFR-Security** — Fully comply with Article 4 of the constitution.
 - **NFR-Portability** — v1 covers **Debian/Ubuntu/Mint** as remote host; support for
-  more OSes is added via adapters (Art. 6) following the **host roadmap**
-  (`plan.md §4`).
+  more OSes is added later via adapters (Art. 6), each implementing the same
+  capability contract.
 - **NFR-Performance** — Common operations (list a folder, refresh the monitor)
   perceptibly fluid at typical network latencies; minimize round trips.
 - **NFR-Resilience** — No parsing/network failure crashes the app (Art. 7).
@@ -212,7 +194,7 @@ The GUI is synthesised on the client (Art. 10): viewers read the file bytes via
 ## 8. Acceptance criteria (v1, high level)
 
 - A user can add a real Linux host, connect and open the desktop.
-- They can browse files, open a working terminal, view processes/services and edit a
+- They can browse files, open a working terminal, view system metrics and edit a
   file, all agentless.
 - Every destructive action asks for confirmation; no secret is stored in plain text.
 - A parsing failure on an "odd" host shows raw output without crashing.

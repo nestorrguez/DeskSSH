@@ -61,7 +61,6 @@ v1).
 🚧 **Early MVP (v0.1.0).** The project is developed with **Spec-Driven
 Development**: the specification lives in `specs/`. Start with:
 
-- [`specs/vision.md`](specs/vision.md) — the why and the where-to (the vision).
 - [`specs/constitution.md`](specs/constitution.md) — the project's principles.
 - [`specs/001-core/spec.md`](specs/001-core/spec.md) — what DeskSSH does.
 - [`specs/001-core/plan.md`](specs/001-core/plan.md) — how it will be built.
