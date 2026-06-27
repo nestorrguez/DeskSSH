@@ -18,6 +18,7 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
   const apps = useMemo(() => getApps(t), [t]);
   const wm = useWindows();
   const [editorTarget, setEditorTarget] = useState<string | null>(null);
+  const [imageTarget, setImageTarget] = useState<string | null>(null);
 
   // Let any app open a file in the editor (Stallman) and focus its window.
   const openEditor = useCallback(
@@ -29,7 +30,17 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
     [apps, wm],
   );
 
-  const ctx: AppContext = { t, session, editorTarget, openEditor };
+  // Let any app open an image in the viewer and focus its window.
+  const openImage = useCallback(
+    (path: string) => {
+      setImageTarget(path);
+      const viewer = apps.find((a) => a.id === 'viewer');
+      if (viewer) wm.openApp(viewer);
+    },
+    [apps, wm],
+  );
+
+  const ctx: AppContext = { t, session, editorTarget, openEditor, imageTarget, openImage };
 
   // The window with the highest z is the active one.
   const visible = wm.windows.filter((w) => !w.minimized);

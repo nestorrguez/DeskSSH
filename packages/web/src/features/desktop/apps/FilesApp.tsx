@@ -4,7 +4,7 @@ import type { FileEntry } from '@deskssh/core';
 import { listDir } from '@/api/gateway';
 import { Button } from '@/components/ui/button';
 import type { AppContext } from '../types';
-import { formatBytes, joinPath, parentPath } from './lib';
+import { formatBytes, imageMimeFor, joinPath, parentPath } from './lib';
 
 function EntryIcon({ type }: { type: FileEntry['type'] }) {
   const c = 'size-4 shrink-0 text-muted-foreground';
@@ -13,7 +13,7 @@ function EntryIcon({ type }: { type: FileEntry['type'] }) {
   return <FileIcon className={c} aria-hidden />;
 }
 
-export function FilesApp({ t, session, openEditor }: AppContext) {
+export function FilesApp({ t, session, openEditor, openImage }: AppContext) {
   const [path, setPath] = useState(session.home);
   const [entries, setEntries] = useState<readonly FileEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +34,11 @@ export function FilesApp({ t, session, openEditor }: AppContext) {
   }, [session.sessionId, path, t]);
 
   function activate(entry: FileEntry): void {
-    if (entry.type === 'directory') setPath(joinPath(path, entry.name));
-    else if (entry.type === 'file') openEditor(joinPath(path, entry.name));
+    const full = joinPath(path, entry.name);
+    if (entry.type === 'directory') setPath(full);
+    else if (entry.type === 'file')
+      if (imageMimeFor(entry.name)) openImage(full);
+      else openEditor(full);
   }
 
   const sorted = [...entries].sort((a, b) => {

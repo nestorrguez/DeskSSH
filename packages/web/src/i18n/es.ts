@@ -42,6 +42,7 @@ export const es: Record<MessageKey, string> = {
   'apps.terminal': 'Terminal',
   'apps.monitor': 'Monitor del sistema',
   'apps.editor': 'Stallman',
+  'apps.viewer': 'Visor de imágenes',
   'apps.credits': 'Acerca de y créditos',
   'credits.license': 'DeskSSH es software libre, licenciado bajo',
   'credits.thirdParty': 'Construido con estos proyectos de código abierto',
@@ -66,4 +67,9 @@ export const es: Record<MessageKey, string> = {
   'editor.loadError': 'No se pudo abrir el archivo',
   'editor.saveError': 'No se pudo guardar',
   'editor.binary': 'Este archivo no parece de texto y no se abrió.',
+  'viewer.empty': 'Ninguna imagen abierta',
+  'viewer.openHint': 'Abre una imagen desde el gestor de archivos.',
+  'viewer.error': 'No se pudo abrir la imagen',
+  'viewer.fit': 'Ajustar',
+  'viewer.actualSize': 'Tamaño real',
 };

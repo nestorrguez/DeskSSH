@@ -41,6 +41,7 @@ export const en = {
   'apps.terminal': 'Terminal',
   'apps.monitor': 'System monitor',
   'apps.editor': 'Stallman',
+  'apps.viewer': 'Image viewer',
   'apps.credits': 'About & credits',
   'credits.license': 'DeskSSH is free software, licensed under',
   'credits.thirdParty': 'Built with these open-source projects',
@@ -65,6 +66,11 @@ export const en = {
   'editor.loadError': 'Could not open file',
   'editor.saveError': 'Could not save',
   'editor.binary': 'This file does not look like text and was not opened.',
+  'viewer.empty': 'No image open',
+  'viewer.openHint': 'Open an image from the file manager.',
+  'viewer.error': 'Could not open image',
+  'viewer.fit': 'Fit',
+  'viewer.actualSize': 'Actual size',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -11,6 +11,10 @@ export interface AppContext {
   editorTarget: string | null;
   /** Open a file in the editor app from anywhere (e.g. the file manager). */
   openEditor: (path: string) => void;
+  /** The image the viewer should open, set via {@link openImage}. */
+  imageTarget: string | null;
+  /** Open an image in the viewer app from anywhere (e.g. the file manager). */
+  openImage: (path: string) => void;
 }
 
 /** A launchable desktop app (file manager, terminal, …). */
