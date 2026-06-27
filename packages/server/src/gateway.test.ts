@@ -44,6 +44,28 @@ const fakeOpener: SessionOpener = (req) => {
       files.set(path, contents);
       return Promise.resolve(ok(undefined, ''));
     },
+    makeDir: () => Promise.resolve(ok(undefined, '')),
+    createFile: (path: string) => {
+      files.set(path, new Uint8Array());
+      return Promise.resolve(ok(undefined, ''));
+    },
+    move: (from: string, to: string) => {
+      const data = files.get(from);
+      if (data) {
+        files.set(to, data);
+        files.delete(from);
+      }
+      return Promise.resolve(ok(undefined, ''));
+    },
+    copy: (from: string, to: string) => {
+      const data = files.get(from);
+      if (data) files.set(to, data);
+      return Promise.resolve(ok(undefined, ''));
+    },
+    remove: (path: string) => {
+      files.delete(path);
+      return Promise.resolve(ok(undefined, ''));
+    },
   } as unknown as Capabilities;
   return Promise.resolve({
     host: `${req.username}@${req.host}`,
@@ -156,5 +178,36 @@ describe('gateway', () => {
     const read = await post('/api/readfile', { sessionId, path: '/tmp/a' });
     expect(read.json.result.kind).toBe('ok');
     expect(Buffer.from(read.json.result.base64, 'base64').toString('utf8')).toBe('hello');
+  });
+
+  it('mkdir/createfile/move/copy/remove route to the adapter', async () => {
+    const sessionId = await connectSession();
+    expect((await post('/api/mkdir', { sessionId, path: '/tmp/d' })).json.result.kind).toBe('ok');
+    expect((await post('/api/createfile', { sessionId, path: '/tmp/n' })).json.result.kind).toBe(
+      'ok',
+    );
+
+    const base64 = Buffer.from('hi').toString('base64');
+    await post('/api/writefile', { sessionId, path: '/tmp/a', base64 });
+    expect(
+      (await post('/api/copy', { sessionId, from: '/tmp/a', to: '/tmp/b' })).json.result.kind,
+    ).toBe('ok');
+    expect(
+      (await post('/api/move', { sessionId, from: '/tmp/b', to: '/tmp/c' })).json.result.kind,
+    ).toBe('ok');
+    const movedAway = await post('/api/readfile', { sessionId, path: '/tmp/b' });
+    expect(movedAway.json.result.base64).toBe('');
+    const moved = await post('/api/readfile', { sessionId, path: '/tmp/c' });
+    expect(Buffer.from(moved.json.result.base64, 'base64').toString('utf8')).toBe('hi');
+
+    expect((await post('/api/remove', { sessionId, path: '/tmp/c' })).json.result.kind).toBe('ok');
+    expect((await post('/api/readfile', { sessionId, path: '/tmp/c' })).json.result.base64).toBe(
+      '',
+    );
+  });
+
+  it('mutation endpoints require a known session', async () => {
+    const missing = await post('/api/mkdir', { sessionId: 'nope', path: '/tmp/x' });
+    expect(missing.status).toBe(404);
   });
 });

@@ -185,6 +185,38 @@ async function handle(
     return sendJson(res, 200, { result });
   }
 
+  if (route === 'POST /api/mkdir') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    return sendJson(res, 200, { result: await entry.adapter.makeDir(asString(body, 'path')) });
+  }
+
+  if (route === 'POST /api/createfile') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    return sendJson(res, 200, { result: await entry.adapter.createFile(asString(body, 'path')) });
+  }
+
+  if (route === 'POST /api/move') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    const result = await entry.adapter.move(asString(body, 'from'), asString(body, 'to'));
+    return sendJson(res, 200, { result });
+  }
+
+  if (route === 'POST /api/copy') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    const result = await entry.adapter.copy(asString(body, 'from'), asString(body, 'to'));
+    return sendJson(res, 200, { result });
+  }
+
+  if (route === 'POST /api/remove') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    return sendJson(res, 200, { result: await entry.adapter.remove(asString(body, 'path')) });
+  }
+
   sendJson(res, 404, { error: `No route for ${route}` });
 }
 
