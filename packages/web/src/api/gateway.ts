@@ -87,3 +87,25 @@ export function writeFile(
 ): Promise<{ result: CapabilityResult<void> }> {
   return post('/api/writefile', { sessionId, path, base64 });
 }
+
+type VoidResult = { result: CapabilityResult<void> };
+
+export function makeDir(sessionId: string, path: string): Promise<VoidResult> {
+  return post('/api/mkdir', { sessionId, path });
+}
+
+export function createFile(sessionId: string, path: string): Promise<VoidResult> {
+  return post('/api/createfile', { sessionId, path });
+}
+
+export function movePath(sessionId: string, from: string, to: string): Promise<VoidResult> {
+  return post('/api/move', { sessionId, from, to });
+}
+
+export function copyPath(sessionId: string, from: string, to: string): Promise<VoidResult> {
+  return post('/api/copy', { sessionId, from, to });
+}
+
+export function removePath(sessionId: string, path: string): Promise<VoidResult> {
+  return post('/api/remove', { sessionId, path });
+}
