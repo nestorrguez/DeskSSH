@@ -28,7 +28,9 @@ import {
   movePath,
   copyPath,
   removePath,
+  type Elevate,
 } from '@/api/gateway';
+import { useElevation, type ElevatableResult } from '../useElevation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -89,6 +91,7 @@ export function FilesApp({
   const [clipboard, setClipboard] = useState<Clipboard | null>(null);
   const [dialog, setDialog] = useState<NameDialog | null>(null);
   const [pendingDelete, setPendingDelete] = useState<FileEntry | null>(null);
+  const { run: runElevated, dialogs: elevationDialogs } = useElevation(session.sessionId, t);
 
   const reload = () => setTick((n) => n + 1);
 
@@ -116,11 +119,14 @@ export function FilesApp({
       else openEditor(full);
   }
 
-  async function runVoid(p: Promise<{ result: { kind: string; reason?: string } }>): Promise<void> {
+  // Run a mutating op through the elevation runner: if it is denied for lack of
+  // privilege, the elevation modals appear and it is retried with credentials.
+  async function runVoid(make: (e?: Elevate) => Promise<ElevatableResult>): Promise<void> {
     setActionError(null);
     try {
-      const { result } = await p;
-      if (result.kind !== 'ok') setActionError(result.reason || t('files.actionError'));
+      const { result } = await runElevated(make);
+      if (result.kind !== 'ok')
+        setActionError(('reason' in result && result.reason) || t('files.actionError'));
       else reload();
     } catch (e) {
       setActionError(e instanceof Error ? e.message : t('files.actionError'));
@@ -152,16 +158,17 @@ export function FilesApp({
 
   function paste(): void {
     if (!clipboard) return;
+    const cb = clipboard;
     const existing = new Set(entries.map((e) => e.name));
-    let name = clipboard.name;
-    if (clipboard.op === 'copy') while (existing.has(name)) name = bumpCopy(name);
+    let name = cb.name;
+    if (cb.op === 'copy') while (existing.has(name)) name = bumpCopy(name);
     const to = joinPath(path, name);
-    const op =
-      clipboard.op === 'cut'
-        ? movePath(session.sessionId, clipboard.from, to)
-        : copyPath(session.sessionId, clipboard.from, to);
-    if (clipboard.op === 'cut') setClipboard(null);
-    void runVoid(op);
+    if (cb.op === 'cut') setClipboard(null);
+    void runVoid((e) =>
+      cb.op === 'cut'
+        ? movePath(session.sessionId, cb.from, to, e)
+        : copyPath(session.sessionId, cb.from, to, e),
+    );
   }
 
   function submitDialog(): void {
@@ -169,10 +176,13 @@ export function FilesApp({
     const value = dialog.value.trim();
     if (!value || value.includes('/')) return;
     const dest = joinPath(path, value);
-    if (dialog.mode === 'newFolder') void runVoid(makeDir(session.sessionId, dest));
-    else if (dialog.mode === 'newFile') void runVoid(createFile(session.sessionId, dest));
-    else if (dialog.target)
-      void runVoid(movePath(session.sessionId, joinPath(path, dialog.target.name), dest));
+    const d = dialog;
+    if (d.mode === 'newFolder') void runVoid((e) => makeDir(session.sessionId, dest, e));
+    else if (d.mode === 'newFile') void runVoid((e) => createFile(session.sessionId, dest, e));
+    else if (d.target) {
+      const from = joinPath(path, d.target.name);
+      void runVoid((e) => movePath(session.sessionId, from, dest, e));
+    }
     setDialog(null);
   }
 
@@ -424,8 +434,10 @@ export function FilesApp({
             <AlertDialogAction
               variant="destructive"
               onClick={() => {
-                if (pendingDelete)
-                  void runVoid(removePath(session.sessionId, joinPath(path, pendingDelete.name)));
+                if (pendingDelete) {
+                  const target = joinPath(path, pendingDelete.name);
+                  void runVoid((e) => removePath(session.sessionId, target, e));
+                }
                 setPendingDelete(null);
               }}
             >
@@ -434,6 +446,9 @@ export function FilesApp({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Privilege-elevation modals (FR-029/093..095) for denied file operations. */}
+      {elevationDialogs}
     </div>
   );
 }

@@ -106,7 +106,7 @@ export const es: Record<MessageKey, string> = {
   'files.open': 'Abrir',
   'files.openWith': 'Abrir con',
   'files.openInTerminal': 'Abrir en terminal',
-  'files.download': 'Descargar',
+  'files.download': 'Descargar a mi computadora',
   'files.rename': 'Renombrar',
   'files.cut': 'Cortar',
   'files.copy': 'Copiar',

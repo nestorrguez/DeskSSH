@@ -292,5 +292,13 @@ describe('gateway', () => {
         })
       ).status,
     ).toBe(400);
+
+    // File ops accept elevation too (shared runCap path).
+    const elevatedRm = await post('/api/remove', {
+      sessionId,
+      path: '/etc/secret',
+      elevate: { kind: 'current', password: 'pw' },
+    });
+    expect(elevatedRm.json.result.kind).toBe('ok');
   });
 });

@@ -99,30 +99,49 @@ export function writeFile(
   sessionId: string,
   path: string,
   base64: string,
+  elevate?: Elevate,
 ): Promise<{ result: CapabilityResult<void> }> {
-  return post('/api/writefile', { sessionId, path, base64 });
+  return post('/api/writefile', { sessionId, path, base64, ...(elevate ? { elevate } : {}) });
 }
 
 type VoidResult = { result: CapabilityResult<void> };
 
-export function makeDir(sessionId: string, path: string): Promise<VoidResult> {
-  return post('/api/mkdir', { sessionId, path });
+export function makeDir(sessionId: string, path: string, elevate?: Elevate): Promise<VoidResult> {
+  return post('/api/mkdir', { sessionId, path, ...(elevate ? { elevate } : {}) });
 }
 
-export function createFile(sessionId: string, path: string): Promise<VoidResult> {
-  return post('/api/createfile', { sessionId, path });
+export function createFile(
+  sessionId: string,
+  path: string,
+  elevate?: Elevate,
+): Promise<VoidResult> {
+  return post('/api/createfile', { sessionId, path, ...(elevate ? { elevate } : {}) });
 }
 
-export function movePath(sessionId: string, from: string, to: string): Promise<VoidResult> {
-  return post('/api/move', { sessionId, from, to });
+export function movePath(
+  sessionId: string,
+  from: string,
+  to: string,
+  elevate?: Elevate,
+): Promise<VoidResult> {
+  return post('/api/move', { sessionId, from, to, ...(elevate ? { elevate } : {}) });
 }
 
-export function copyPath(sessionId: string, from: string, to: string): Promise<VoidResult> {
-  return post('/api/copy', { sessionId, from, to });
+export function copyPath(
+  sessionId: string,
+  from: string,
+  to: string,
+  elevate?: Elevate,
+): Promise<VoidResult> {
+  return post('/api/copy', { sessionId, from, to, ...(elevate ? { elevate } : {}) });
 }
 
-export function removePath(sessionId: string, path: string): Promise<VoidResult> {
-  return post('/api/remove', { sessionId, path });
+export function removePath(
+  sessionId: string,
+  path: string,
+  elevate?: Elevate,
+): Promise<VoidResult> {
+  return post('/api/remove', { sessionId, path, ...(elevate ? { elevate } : {}) });
 }
 
 export function listProcesses(

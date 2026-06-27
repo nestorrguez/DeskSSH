@@ -16,6 +16,8 @@ import { attachTerminal } from './terminal.js';
 import { serveStatic } from './static.js';
 import { makeElevated, type Elevate } from './elevate.js';
 import { detectPrivilege } from '@deskssh/core';
+import type { Capabilities, CapabilityResult } from '@deskssh/core';
+import type { SessionEntry } from './session-manager.js';
 
 const MAX_BODY_BYTES = 1_000_000; // PEM keys are small; cap to avoid abuse.
 
@@ -103,6 +105,23 @@ function parseElevate(value: unknown): Elevate | undefined {
     return { kind: 'user', user: o['user'], password: o['password'] };
   }
   throw new HttpError(400, 'Invalid "elevate": expected { kind: "current"|"user", … }');
+}
+
+/** Run a capability against a session, optionally elevated per the request's
+ *  `elevate` block, tearing down any transient session afterwards. */
+async function runCap<T>(
+  entry: SessionEntry,
+  body: Record<string, unknown>,
+  call: (adapter: Capabilities) => Promise<CapabilityResult<T>>,
+): Promise<CapabilityResult<T>> {
+  const elevate = parseElevate(body['elevate']);
+  if (!elevate) return call(entry.adapter);
+  const { adapter, cleanup } = await makeElevated(entry, elevate);
+  try {
+    return await call(adapter);
+  } finally {
+    cleanup();
+  }
 }
 
 /** Build (but do not start) the gateway HTTP server. */
@@ -209,41 +228,47 @@ async function handle(
   if (route === 'POST /api/writefile') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;
     const entry = requireSession(manager, body);
-    const bytes = Buffer.from(asString(body, 'base64'), 'base64');
-    const result = await entry.adapter.writeFile(asString(body, 'path'), new Uint8Array(bytes));
+    const bytes = new Uint8Array(Buffer.from(asString(body, 'base64'), 'base64'));
+    const path = asString(body, 'path');
+    const result = await runCap(entry, body, (a) => a.writeFile(path, bytes));
     return sendJson(res, 200, { result });
   }
 
   if (route === 'POST /api/mkdir') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;
     const entry = requireSession(manager, body);
-    return sendJson(res, 200, { result: await entry.adapter.makeDir(asString(body, 'path')) });
+    const path = asString(body, 'path');
+    return sendJson(res, 200, { result: await runCap(entry, body, (a) => a.makeDir(path)) });
   }
 
   if (route === 'POST /api/createfile') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;
     const entry = requireSession(manager, body);
-    return sendJson(res, 200, { result: await entry.adapter.createFile(asString(body, 'path')) });
+    const path = asString(body, 'path');
+    return sendJson(res, 200, { result: await runCap(entry, body, (a) => a.createFile(path)) });
   }
 
   if (route === 'POST /api/move') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;
     const entry = requireSession(manager, body);
-    const result = await entry.adapter.move(asString(body, 'from'), asString(body, 'to'));
-    return sendJson(res, 200, { result });
+    const from = asString(body, 'from');
+    const to = asString(body, 'to');
+    return sendJson(res, 200, { result: await runCap(entry, body, (a) => a.move(from, to)) });
   }
 
   if (route === 'POST /api/copy') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;
     const entry = requireSession(manager, body);
-    const result = await entry.adapter.copy(asString(body, 'from'), asString(body, 'to'));
-    return sendJson(res, 200, { result });
+    const from = asString(body, 'from');
+    const to = asString(body, 'to');
+    return sendJson(res, 200, { result: await runCap(entry, body, (a) => a.copy(from, to)) });
   }
 
   if (route === 'POST /api/remove') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;
     const entry = requireSession(manager, body);
-    return sendJson(res, 200, { result: await entry.adapter.remove(asString(body, 'path')) });
+    const path = asString(body, 'path');
+    return sendJson(res, 200, { result: await runCap(entry, body, (a) => a.remove(path)) });
   }
 
   if (route === 'POST /api/processes') {
@@ -258,16 +283,9 @@ async function handle(
     const pid = Number(body['pid']);
     if (!Number.isInteger(pid) || pid <= 0) throw new HttpError(400, 'Invalid "pid"');
     const signal = asOneOf(body, 'signal', ['TERM', 'KILL', 'HUP'] as const);
-    const elevate = parseElevate(body['elevate']);
-    if (!elevate) {
-      return sendJson(res, 200, { result: await entry.adapter.signalProcess(pid, signal) });
-    }
-    const { adapter, cleanup } = await makeElevated(entry, elevate);
-    try {
-      return sendJson(res, 200, { result: await adapter.signalProcess(pid, signal) });
-    } finally {
-      cleanup();
-    }
+    return sendJson(res, 200, {
+      result: await runCap(entry, body, (a) => a.signalProcess(pid, signal)),
+    });
   }
 
   if (route === 'POST /api/service') {
@@ -275,16 +293,9 @@ async function handle(
     const entry = requireSession(manager, body);
     const name = asString(body, 'name');
     const action = asOneOf(body, 'action', ['start', 'stop', 'restart'] as const);
-    const elevate = parseElevate(body['elevate']);
-    if (!elevate) {
-      return sendJson(res, 200, { result: await entry.adapter.serviceAction(name, action) });
-    }
-    const { adapter, cleanup } = await makeElevated(entry, elevate);
-    try {
-      return sendJson(res, 200, { result: await adapter.serviceAction(name, action) });
-    } finally {
-      cleanup();
-    }
+    return sendJson(res, 200, {
+      result: await runCap(entry, body, (a) => a.serviceAction(name, action)),
+    });
   }
 
   if (route === 'POST /api/privilege') {

@@ -105,7 +105,7 @@ export const en = {
   'files.open': 'Open',
   'files.openWith': 'Open with',
   'files.openInTerminal': 'Open in terminal',
-  'files.download': 'Download',
+  'files.download': 'Download to my computer',
   'files.rename': 'Rename',
   'files.cut': 'Cut',
   'files.copy': 'Copy',
