@@ -3,7 +3,16 @@
 // imports from @deskssh/core are erased at build, so no Node/ssh2 code reaches the
 // bundle.
 
-import type { CapabilityResult, FileEntry, CommandRecord, SystemMetrics } from '@deskssh/core';
+import type {
+  CapabilityResult,
+  CommandRecord,
+  FileEntry,
+  Process,
+  ProcessSignal,
+  ServiceAction,
+  ServiceState,
+  SystemMetrics,
+} from '@deskssh/core';
 
 export type AuthInput =
   | { kind: 'password'; password: string }
@@ -108,4 +117,26 @@ export function copyPath(sessionId: string, from: string, to: string): Promise<V
 
 export function removePath(sessionId: string, path: string): Promise<VoidResult> {
   return post('/api/remove', { sessionId, path });
+}
+
+export function listProcesses(
+  sessionId: string,
+): Promise<{ result: CapabilityResult<readonly Process[]> }> {
+  return post('/api/processes', { sessionId });
+}
+
+export function signalProcess(
+  sessionId: string,
+  pid: number,
+  signal: ProcessSignal,
+): Promise<VoidResult> {
+  return post('/api/signal', { sessionId, pid, signal });
+}
+
+export function serviceAction(
+  sessionId: string,
+  name: string,
+  action: ServiceAction,
+): Promise<{ result: CapabilityResult<ServiceState> }> {
+  return post('/api/service', { sessionId, name, action });
 }
