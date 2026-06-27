@@ -22,8 +22,9 @@ export interface SessionEntry {
   readonly os: OsInfo;
   readonly adapter: Capabilities;
   readonly log: TransparencyLog;
-  /** Open an interactive PTY (Terminal app). Optional: not all openers provide it. */
-  readonly openPty?: (cols: number, rows: number) => Promise<PtySession>;
+  /** Open an interactive PTY (Terminal app). Optional: not all openers provide it.
+   *  `cwd` starts the shell in a directory ("Open in terminal"). */
+  readonly openPty?: (cols: number, rows: number, cwd?: string) => Promise<PtySession>;
   /** Tear down the underlying SSH connection. */
   readonly close: () => void;
 }

@@ -103,7 +103,7 @@ export function createSshOpener(store: KnownHostsStore): SessionOpener {
       os,
       adapter,
       log,
-      openPty: (cols, rows) => session.openPty(cols, rows),
+      openPty: (cols, rows, cwd) => session.openPty(cols, rows, cwd),
       close: () => session.close(),
     };
   };

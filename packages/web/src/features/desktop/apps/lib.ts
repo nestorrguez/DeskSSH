@@ -92,3 +92,8 @@ export function imageMimeFor(name: string): string | null {
 export function isPdf(name: string): boolean {
   return name.toLowerCase().endsWith('.pdf');
 }
+
+/** Single-quote a string for safe use as a shell argument (mirrors core `quote`). */
+export function shellQuote(arg: string): string {
+  return `'${arg.replace(/'/g, `'\\''`)}'`;
+}

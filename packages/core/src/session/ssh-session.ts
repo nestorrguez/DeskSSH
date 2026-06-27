@@ -7,6 +7,7 @@ import { Client } from 'ssh2';
 import type { ClientChannel, ConnectConfig, PseudoTtyOptions, SFTPWrapper } from 'ssh2';
 import type { CommandExecutor, ExecResult } from '../exec/types.js';
 import type { ConnectOptions, PtySession, SessionState } from './types.js';
+import { quote } from '../adapters/shell.js';
 
 function fingerprint(key: Buffer): string {
   return `SHA256:${createHash('sha256').update(key).digest('base64').replace(/=+$/, '')}`;
@@ -123,9 +124,15 @@ export class SshSession implements CommandExecutor {
     });
   }
 
-  /** Open a PTY as a transport-agnostic {@link PtySession} (no ssh2 types leak). */
-  async openPty(cols = 80, rows = 24): Promise<PtySession> {
+  /**
+   * Open a PTY as a transport-agnostic {@link PtySession} (no ssh2 types leak).
+   * When `cwd` is given the shell starts in that directory (e.g. "Open in
+   * terminal" from the file manager); the cd is issued as the first input and
+   * the screen cleared so the user sees a clean prompt.
+   */
+  async openPty(cols = 80, rows = 24, cwd?: string): Promise<PtySession> {
     const stream = await this.shell({ cols, rows, term: 'xterm-256color' });
+    if (cwd) stream.write(`cd ${quote(cwd)} 2>/dev/null; clear\n`);
     return {
       onData: (listener) => {
         stream.on('data', (chunk: Buffer) => listener(chunk.toString('utf8')));

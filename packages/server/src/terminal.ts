@@ -21,12 +21,13 @@ export function attachTerminal(server: Server, manager: SessionManager): WebSock
     const url = new URL(req.url ?? '/', 'http://localhost');
     if (url.pathname !== TERMINAL_PATH) return; // leave other upgrades alone
     const sessionId = url.searchParams.get('sessionId') ?? '';
+    const cwd = url.searchParams.get('cwd') ?? undefined;
     const entry = manager.get(sessionId);
     if (!entry?.openPty) {
       socket.destroy();
       return;
     }
-    wss.handleUpgrade(req, socket, head, (ws) => bridge(ws, entry.openPty!));
+    wss.handleUpgrade(req, socket, head, (ws) => bridge(ws, entry.openPty!, cwd));
   });
 
   return wss;
@@ -34,9 +35,14 @@ export function attachTerminal(server: Server, manager: SessionManager): WebSock
 
 function bridge(
   ws: WebSocket,
-  openPty: (cols: number, rows: number) => Promise<import('@deskssh/core').PtySession>,
+  openPty: (
+    cols: number,
+    rows: number,
+    cwd?: string,
+  ) => Promise<import('@deskssh/core').PtySession>,
+  cwd?: string,
 ): void {
-  void openPty(80, 24)
+  void openPty(80, 24, cwd)
     .then((pty) => {
       pty.onData((chunk) => {
         if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type: 'output', data: chunk }));

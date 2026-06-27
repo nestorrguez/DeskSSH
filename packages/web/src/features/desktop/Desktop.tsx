@@ -20,6 +20,8 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
   const [editorTarget, setEditorTarget] = useState<string | null>(null);
   const [imageTarget, setImageTarget] = useState<string | null>(null);
   const [pdfTarget, setPdfTarget] = useState<string | null>(null);
+  const [terminalCwd, setTerminalCwd] = useState<string | null>(null);
+  const [terminalReq, setTerminalReq] = useState(0);
 
   // Let any app open a file in the editor (Stallman) and focus its window.
   const openEditor = useCallback(
@@ -51,6 +53,18 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
     [apps, wm],
   );
 
+  // Open (or re-target) the terminal in a directory. The bumped request lets an
+  // already-open terminal cd into the new directory instead of reconnecting.
+  const openTerminal = useCallback(
+    (path: string) => {
+      setTerminalCwd(path);
+      setTerminalReq((n) => n + 1);
+      const terminal = apps.find((a) => a.id === 'terminal');
+      if (terminal) wm.openApp(terminal);
+    },
+    [apps, wm],
+  );
+
   const ctx: AppContext = {
     t,
     session,
@@ -60,6 +74,9 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
     openImage,
     pdfTarget,
     openPdf,
+    terminalCwd,
+    terminalReq,
+    openTerminal,
   };
 
   // The window with the highest z is the active one.

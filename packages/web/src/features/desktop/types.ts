@@ -19,6 +19,12 @@ export interface AppContext {
   pdfTarget: string | null;
   /** Open a PDF in the viewer app from anywhere (e.g. the file manager). */
   openPdf: (path: string) => void;
+  /** Directory the terminal should start in, set via {@link openTerminal}. */
+  terminalCwd: string | null;
+  /** Bumped on each {@link openTerminal} call so an open terminal can re-target. */
+  terminalReq: number;
+  /** Open the terminal in a directory from anywhere (e.g. the file manager). */
+  openTerminal: (path: string) => void;
 }
 
 /** A launchable desktop app (file manager, terminal, …). */
