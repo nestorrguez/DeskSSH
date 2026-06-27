@@ -179,10 +179,10 @@ or logged.
 - [x] **M6.1** `isPermissionDenied(text)` heuristic + `detectPrivilege(exec)` probe
       (`id -u`/`id -nG`, presence of `sudo`/`su`) → canSudo/escalationAvailable.
       → FR-093
-- [x] **M6.2** Elevated execution: `withElevation(exec, pw)` runs `sudo -S -p '' sh -c
-    <cmd>` with the password on **stdin** (CommandExecutor gained an `input` arg);
-      the transparency log forwards but never records it. Other-user path = a
-      transient SSH session (below), not su-over-PTY. → FR-094/095, Art. 4
+- [x] **M6.2** Elevated execution: `withElevation(exec, pw)` runs the command under
+      `sudo -S` (subshell) with the password on **stdin** (CommandExecutor gained an
+      `input` arg); the transparency log forwards but never records it. Other-user
+      path = a transient SSH session (below), not su-over-PTY. → FR-094/095, Art. 4
 - [x] **M6.3** Gateway: `/api/privilege` probe; `/api/signal` and `/api/service`
       accept a one-shot `elevate` ({current}|{user}); `server/elevate.ts` builds the
       elevated adapter (current-user sudo, or a transient session as another user) and
