@@ -88,6 +88,7 @@ export const es: Record<MessageKey, string> = {
   'editor.unsaved': 'Cambios sin guardar',
   'editor.loadError': 'No se pudo abrir el archivo',
   'editor.saveError': 'No se pudo guardar',
+  'editor.loading': 'Cargando editor…',
   'editor.binary': 'Este archivo no parece de texto y no se abrió.',
   'docs.bold': 'Negrita',
   'docs.italic': 'Cursiva',

@@ -7,13 +7,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && NODE_OPTIONS=--max-old-space-size=4096 vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@deskssh/core": "workspace:*",
+    "@monaco-editor/react": "^4.7.0",
     "@tailwindcss/vite": "^4.3.1",
     "@tiptap/pm": "^3.27.1",
     "@tiptap/react": "^3.27.1",
@@ -23,6 +24,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.21.0",
+    "monaco-editor": "^0.55.1",
     "pdfjs-dist": "^6.0.227",
     "radix-ui": "^1.6.0",
     "react": "^19.2.7",

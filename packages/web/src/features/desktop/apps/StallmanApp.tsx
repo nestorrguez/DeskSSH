@@ -1,20 +1,27 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Save, Circle } from 'lucide-react';
 import { readFile, writeFile } from '@/api/gateway';
 import { Button } from '@/components/ui/button';
 import type { AppContext } from '../types';
-import { base64ToText, looksLikeText, textToBase64 } from './lib';
+import { base64ToText, looksLikeText, monacoLanguageFor, textToBase64 } from './lib';
+
+const MonacoEditor = lazy(() => import('./MonacoEditor'));
 
 type Status = 'idle' | 'loading' | 'saving' | 'saved' | 'error';
 
-// Stallman — DeskSSH's text editor. Opens files via readFile, saves via writeFile;
-// the GUI emulates the editor (Art. 10) rather than driving a remote nano/vim.
+// Stallman — DeskSSH's code editor. Opens files via readFile, saves via writeFile;
+// the GUI emulates the editor (Art. 10) with Monaco (the VS Code editor), syntax-
+// highlighting by file type. Monaco is lazy-loaded so it stays out of the main
+// bundle until the editor is first opened.
 export function StallmanApp({ t, session, editorTarget }: AppContext) {
   const [path, setPath] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState<string | null>(null);
+
+  // A ref so Monaco's Ctrl-S command always calls the current save closure.
+  const saveRef = useRef<() => void>(() => {});
 
   // Load whenever the requested target changes.
   useEffect(() => {
@@ -70,6 +77,7 @@ export function StallmanApp({ t, session, editorTarget }: AppContext) {
         setMessage(t('editor.saveError'));
       });
   }
+  saveRef.current = save;
 
   return (
     <div className="flex h-full flex-col">
@@ -100,23 +108,26 @@ export function StallmanApp({ t, session, editorTarget }: AppContext) {
 
       {message && <p className="px-3 py-2 text-sm text-destructive">{message}</p>}
 
-      <textarea
-        className="min-h-0 flex-1 resize-none bg-transparent p-3 font-mono text-xs outline-none"
-        value={text}
-        spellCheck={false}
-        disabled={!path}
-        onChange={(e) => {
-          setText(e.target.value);
-          setDirty(true);
-          if (status === 'saved') setStatus('idle');
-        }}
-        onKeyDown={(e) => {
-          if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-            e.preventDefault();
-            save();
-          }
-        }}
-      />
+      <div className="min-h-0 flex-1">
+        {path === null ? (
+          <p className="p-3 text-sm text-muted-foreground">{t('editor.untitled')}</p>
+        ) : (
+          <Suspense
+            fallback={<p className="p-3 text-xs text-muted-foreground">{t('editor.loading')}</p>}
+          >
+            <MonacoEditor
+              language={monacoLanguageFor(path)}
+              value={text}
+              onChange={(v) => {
+                setText(v);
+                setDirty(true);
+                if (status === 'saved') setStatus('idle');
+              }}
+              onSave={() => saveRef.current()}
+            />
+          </Suspense>
+        )}
+      </div>
     </div>
   );
 }

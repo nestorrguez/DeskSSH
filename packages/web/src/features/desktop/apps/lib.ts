@@ -97,3 +97,58 @@ export function isPdf(name: string): boolean {
 export function shellQuote(arg: string): string {
   return `'${arg.replace(/'/g, `'\\''`)}'`;
 }
+
+// Monaco language id keyed by lowercase file extension. Covers the languages
+// called out in the feedback (C, C++, C#, Java, Python, JS, TS, SQL, HTML, XML,
+// JSON, Markdown) plus a handful of common ones; anything unknown is plain text.
+const MONACO_LANG: Record<string, string> = {
+  c: 'c',
+  h: 'c',
+  cpp: 'cpp',
+  cc: 'cpp',
+  cxx: 'cpp',
+  hpp: 'cpp',
+  hh: 'cpp',
+  cs: 'csharp',
+  java: 'java',
+  py: 'python',
+  pyw: 'python',
+  js: 'javascript',
+  mjs: 'javascript',
+  cjs: 'javascript',
+  jsx: 'javascript',
+  ts: 'typescript',
+  tsx: 'typescript',
+  sql: 'sql',
+  html: 'html',
+  htm: 'html',
+  xml: 'xml',
+  svg: 'xml',
+  json: 'json',
+  md: 'markdown',
+  markdown: 'markdown',
+  css: 'css',
+  scss: 'scss',
+  less: 'less',
+  sh: 'shell',
+  bash: 'shell',
+  yaml: 'yaml',
+  yml: 'yaml',
+  go: 'go',
+  rs: 'rust',
+  php: 'php',
+  rb: 'ruby',
+  ini: 'ini',
+  conf: 'ini',
+  toml: 'ini',
+};
+
+/** The Monaco language id for a file name (extension-based), or 'plaintext'. */
+export function monacoLanguageFor(name: string): string {
+  const seg = name.slice(name.lastIndexOf('/') + 1);
+  if (seg === 'Dockerfile') return 'dockerfile';
+  if (seg === 'Makefile') return 'makefile';
+  const dot = seg.lastIndexOf('.');
+  if (dot < 0) return 'plaintext';
+  return MONACO_LANG[seg.slice(dot + 1).toLowerCase()] ?? 'plaintext';
+}

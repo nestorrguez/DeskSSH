@@ -87,6 +87,7 @@ export const en = {
   'editor.unsaved': 'Unsaved changes',
   'editor.loadError': 'Could not open file',
   'editor.saveError': 'Could not save',
+  'editor.loading': 'Loading editor…',
   'editor.binary': 'This file does not look like text and was not opened.',
   'docs.bold': 'Bold',
   'docs.italic': 'Italic',
