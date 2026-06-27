@@ -1,4 +1,13 @@
-import { Folder, Info, TerminalSquare, Activity, FileText, Image, Heart } from 'lucide-react';
+import {
+  Folder,
+  Info,
+  TerminalSquare,
+  Activity,
+  FileText,
+  Image,
+  FileType,
+  Heart,
+} from 'lucide-react';
 import type { Translator } from '@/i18n';
 import type { AppDefinition } from '../types';
 import { FilesApp } from './FilesApp';
@@ -7,6 +16,7 @@ import { SystemApp } from './SystemApp';
 import { StallmanApp } from './StallmanApp';
 import { TerminalApp } from './TerminalApp';
 import { ImageViewerApp } from './ImageViewerApp';
+import { PdfViewerApp } from './PdfViewerApp';
 import { CreditsApp } from './CreditsApp';
 
 /** The apps available in the launcher. */
@@ -53,6 +63,13 @@ export function getApps(t: Translator): AppDefinition[] {
       icon: Image,
       defaultSize: { w: 600, h: 480 },
       render: (ctx) => <ImageViewerApp {...ctx} />,
+    },
+    {
+      id: 'pdf',
+      title: t('apps.pdf'),
+      icon: FileType,
+      defaultSize: { w: 640, h: 560 },
+      render: (ctx) => <PdfViewerApp {...ctx} />,
     },
     {
       id: 'credits',

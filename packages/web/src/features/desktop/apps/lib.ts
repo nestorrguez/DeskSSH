@@ -38,11 +38,15 @@ export function formatUptime(seconds: number): string {
   return parts.join(' ');
 }
 
+/** Decode a base64 string to raw bytes (browser-safe). */
+export function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
+}
+
 /** Decode a base64 string to UTF-8 text (browser-safe). */
 export function base64ToText(base64: string): string {
-  const binary = atob(base64);
-  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
+  return new TextDecoder().decode(base64ToBytes(base64));
 }
 
 /** Encode UTF-8 text to base64 (browser-safe). */
@@ -82,4 +86,9 @@ export function imageMimeFor(name: string): string | null {
   const dot = name.lastIndexOf('.');
   if (dot < 0) return null;
   return IMAGE_MIME[name.slice(dot + 1).toLowerCase()] ?? null;
+}
+
+/** Does this file name look like a PDF? */
+export function isPdf(name: string): boolean {
+  return name.toLowerCase().endsWith('.pdf');
 }

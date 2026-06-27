@@ -19,6 +19,7 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
   const wm = useWindows();
   const [editorTarget, setEditorTarget] = useState<string | null>(null);
   const [imageTarget, setImageTarget] = useState<string | null>(null);
+  const [pdfTarget, setPdfTarget] = useState<string | null>(null);
 
   // Let any app open a file in the editor (Stallman) and focus its window.
   const openEditor = useCallback(
@@ -40,7 +41,26 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
     [apps, wm],
   );
 
-  const ctx: AppContext = { t, session, editorTarget, openEditor, imageTarget, openImage };
+  // Let any app open a PDF in the PDF viewer and focus its window.
+  const openPdf = useCallback(
+    (path: string) => {
+      setPdfTarget(path);
+      const viewer = apps.find((a) => a.id === 'pdf');
+      if (viewer) wm.openApp(viewer);
+    },
+    [apps, wm],
+  );
+
+  const ctx: AppContext = {
+    t,
+    session,
+    editorTarget,
+    openEditor,
+    imageTarget,
+    openImage,
+    pdfTarget,
+    openPdf,
+  };
 
   // The window with the highest z is the active one.
   const visible = wm.windows.filter((w) => !w.minimized);

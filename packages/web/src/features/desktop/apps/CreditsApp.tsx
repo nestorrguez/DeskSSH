@@ -24,6 +24,12 @@ const CREDITS: Credit[] = [
   { name: 'Tailwind CSS', license: 'MIT', use: 'Styling', url: 'https://tailwindcss.com' },
   { name: 'Lucide', license: 'ISC', use: 'Icons', url: 'https://lucide.dev' },
   { name: 'xterm.js', license: 'MIT', use: 'Terminal', url: 'https://xtermjs.org' },
+  {
+    name: 'pdf.js',
+    license: 'Apache-2.0',
+    use: 'PDF rendering',
+    url: 'https://mozilla.github.io/pdf.js',
+  },
   { name: 'ssh2', license: 'MIT', use: 'SSH transport', url: 'https://github.com/mscdex/ssh2' },
   { name: 'ws', license: 'MIT', use: 'WebSocket', url: 'https://github.com/websockets/ws' },
   {

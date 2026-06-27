@@ -15,6 +15,10 @@ export interface AppContext {
   imageTarget: string | null;
   /** Open an image in the viewer app from anywhere (e.g. the file manager). */
   openImage: (path: string) => void;
+  /** The PDF the viewer should open, set via {@link openPdf}. */
+  pdfTarget: string | null;
+  /** Open a PDF in the viewer app from anywhere (e.g. the file manager). */
+  openPdf: (path: string) => void;
 }
 
 /** A launchable desktop app (file manager, terminal, …). */

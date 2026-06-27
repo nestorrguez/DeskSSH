@@ -42,6 +42,7 @@ export const en = {
   'apps.monitor': 'System monitor',
   'apps.editor': 'Stallman',
   'apps.viewer': 'Image viewer',
+  'apps.pdf': 'PDF viewer',
   'apps.credits': 'About & credits',
   'credits.license': 'DeskSSH is free software, licensed under',
   'credits.thirdParty': 'Built with these open-source projects',
@@ -71,6 +72,14 @@ export const en = {
   'viewer.error': 'Could not open image',
   'viewer.fit': 'Fit',
   'viewer.actualSize': 'Actual size',
+  'pdf.empty': 'No PDF open',
+  'pdf.openHint': 'Open a PDF from the file manager.',
+  'pdf.error': 'Could not open PDF',
+  'pdf.page': 'Page {n} / {total}',
+  'pdf.prev': 'Previous page',
+  'pdf.next': 'Next page',
+  'pdf.zoomIn': 'Zoom in',
+  'pdf.zoomOut': 'Zoom out',
 } as const;
 
 export type MessageKey = keyof typeof en;
