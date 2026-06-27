@@ -153,6 +153,12 @@ client**:
 - **Monitor** = `systemMetrics` + `listProcesses` by _polling_, not a live `top`;
   it also hosts process actions (`signalProcess`) and basic service control
   (`serviceAction`) — confirmed before running (FR-051/052/053).
+- **System info** = a `systemInfo()` capability that gathers fastfetch-style host
+  facts in one round trip from standard sources (`/etc/os-release`, `uname -r`,
+  `/proc/uptime|cpuinfo|meminfo`, `dpkg --get-selections | wc -l`, `df -P /`,
+  `hostname -I`) — agentless, no fastfetch needed (FR-016).
+- **Command history** = the transparency log surfaced in its own app (FR-013);
+  the gateway exposes the session's log (`/api/transparency`).
 - The **only** deliberate exception is the **terminal** app, which does expose the
   raw shell (there the user sees `bash`/`PowerShell`/`csh`); it can also start in a
   given directory (FR-032) by issuing `cd` as the first PTY input.

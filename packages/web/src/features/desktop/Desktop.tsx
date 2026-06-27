@@ -98,9 +98,10 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
-      {/* Desktop surface */}
+      {/* Desktop surface. `isolate` confines the windows' growing z-index to this
+          stacking context so portal'd menus/dialogs (FR-026) always render above. */}
       <div
-        className="relative min-h-0 flex-1"
+        className="relative isolate min-h-0 flex-1"
         style={{
           backgroundColor: 'oklch(0.16 0.006 285.8)',
           backgroundImage:

@@ -223,6 +223,21 @@ existing capabilities + the M6 elevation runner.
 - [ ] **M7.4** Verify manually against the test VMs (a root-owned op → elevation;
       a name collision → conflict modal; an upload round-trip).
 
+## M8 — Desktop polish: stacking fix, System info, Command history, launcher — TODO
+
+From 2026-06-27 in-app testing. Specced first (spec §6 FR-010/011/013/016).
+
+- [x] **M8.1** Fix pop-up stacking: context menus / dialogs / launcher render above
+      windows (`isolate` on the windows container caps their growing z-index). → FR-010
+- [ ] **M8.2** `systemInfo()` capability (Debian adapter, one round trip) + gateway
+      endpoint + client; revamp **System info** into a fastfetch-style snapshot. → FR-016
+- [ ] **M8.3** New **Command history** app showing the transparency log
+      (`/api/transparency`); remove the command list from System info. → FR-013, Art. 3
+- [ ] **M8.4** Redesign the **launcher** to a Windows-XP-style arrangement (header
+      with session identity, app list, places/session column, Disconnect footer) —
+      arrangement only, keep the flat visual style. → FR-011
+- [ ] **M8.5** Verify in the running app against the test VMs.
+
 ## Next / post-v1
 
 The near-term technical backlog (handler-registry unification, FR-071 close-guard)

@@ -99,11 +99,25 @@ into commands executed on the host. No agents, no streaming, and with
 
 ### Desktop shell
 
-- **FR-010** Show a desktop with movable/resizable windows and a taskbar.
-- **FR-011** App launcher ("start menu") to open the available apps.
+- **FR-010** Show a desktop with movable/resizable windows and a taskbar. Pop-up
+  surfaces (context menus, dialogs, the launcher) must always render **above** the
+  windows.
+- **FR-011** App launcher ("start menu") to open the available apps, laid out in a
+  structured, **Windows-XP-style arrangement** (a header with the session identity,
+  an app list, a places/session column and a footer with Disconnect) — the
+  _arrangement_, not the visual styling (no bevels/gradients; keep DeskSSH's flat
+  look).
 - **FR-012** Support multiple windows/apps open simultaneously over one session.
-- **FR-013** Visible indicator to inspect the command of the last action
-  (transparency, Art. 3).
+- **FR-013** Command transparency: every command DeskSSH runs is inspectable
+  (Art. 3). It lives in its **own app, "Command history"** (a chronological list of
+  the commands run, with exit code), not buried inside System info.
+
+### App: System info
+
+- **FR-016** Show a **fastfetch-style** snapshot of the host — distro/pretty name,
+  hostname, kernel, uptime, package count, shell, CPU, memory and disk usage, and
+  local IP — gathered **agentlessly** from standard files/commands (`/etc/os-release`,
+  `uname`, `/proc`, `dpkg`, `df`, …); no fastfetch/neofetch required on the host.
 
 ### App: File manager
 
