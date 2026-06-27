@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Folder,
   File as FileIcon,
@@ -9,6 +9,7 @@ import {
   FilePlus,
   TerminalSquare,
   Download,
+  Upload,
   Pencil,
   Scissors,
   Copy,
@@ -23,6 +24,7 @@ import type { FileEntry } from '@deskssh/core';
 import {
   listDir,
   readFile,
+  writeFile,
   makeDir,
   createFile,
   movePath,
@@ -73,6 +75,7 @@ function EntryIcon({ type }: { type: FileEntry['type'] }) {
 
 type Clipboard = { from: string; name: string; op: 'cut' | 'copy' };
 type NameDialog = { mode: 'newFolder' | 'newFile' | 'rename'; value: string; target?: FileEntry };
+type Conflict = { name: string; onKeepBoth: () => void; onReplace: () => void };
 
 export function FilesApp({
   t,
@@ -91,6 +94,8 @@ export function FilesApp({
   const [clipboard, setClipboard] = useState<Clipboard | null>(null);
   const [dialog, setDialog] = useState<NameDialog | null>(null);
   const [pendingDelete, setPendingDelete] = useState<FileEntry | null>(null);
+  const [conflict, setConflict] = useState<Conflict | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { run: runElevated, dialogs: elevationDialogs } = useElevation(session.sessionId, t);
 
   const reload = () => setTick((n) => n + 1);
@@ -121,16 +126,46 @@ export function FilesApp({
 
   // Run a mutating op through the elevation runner: if it is denied for lack of
   // privilege, the elevation modals appear and it is retried with credentials.
-  async function runVoid(make: (e?: Elevate) => Promise<ElevatableResult>): Promise<void> {
+  // Returns whether it ultimately succeeded (so callers can chain, e.g. replace).
+  async function runVoid(make: (e?: Elevate) => Promise<ElevatableResult>): Promise<boolean> {
     setActionError(null);
     try {
       const { result } = await runElevated(make);
-      if (result.kind !== 'ok')
+      if (result.kind !== 'ok') {
         setActionError(('reason' in result && result.reason) || t('files.actionError'));
-      else reload();
+        return false;
+      }
+      reload();
+      return true;
     } catch (e) {
       setActionError(e instanceof Error ? e.message : t('files.actionError'));
+      return false;
     }
+  }
+
+  /** If `name` collides in the current dir, ask Replace / Keep both / Cancel;
+   *  otherwise run `onName(name)` directly. `onReplace` overwrites the existing one. */
+  function withConflict(
+    name: string,
+    onName: (finalName: string) => void,
+    onReplace: () => void,
+  ): void {
+    const existing = new Set(entries.map((e) => e.name));
+    if (!existing.has(name)) {
+      onName(name);
+      return;
+    }
+    setConflict({
+      name,
+      onKeepBoth: () => {
+        setConflict(null);
+        onName(uniqueName(name, existing));
+      },
+      onReplace: () => {
+        setConflict(null);
+        onReplace();
+      },
+    });
   }
 
   async function download(entry: FileEntry): Promise<void> {
@@ -156,18 +191,29 @@ export function FilesApp({
     }
   }
 
+  /** A move/copy of `from` into the current dir as `finalName`. */
+  function bring(from: string, finalName: string, op: 'cut' | 'copy'): Promise<boolean> {
+    const to = joinPath(path, finalName);
+    return runVoid((e) =>
+      op === 'cut'
+        ? movePath(session.sessionId, from, to, e)
+        : copyPath(session.sessionId, from, to, e),
+    );
+  }
+
   function paste(): void {
     if (!clipboard) return;
     const cb = clipboard;
-    const existing = new Set(entries.map((e) => e.name));
-    let name = cb.name;
-    if (cb.op === 'copy') while (existing.has(name)) name = bumpCopy(name);
-    const to = joinPath(path, name);
     if (cb.op === 'cut') setClipboard(null);
-    void runVoid((e) =>
-      cb.op === 'cut'
-        ? movePath(session.sessionId, cb.from, to, e)
-        : copyPath(session.sessionId, cb.from, to, e),
+    withConflict(
+      cb.name,
+      (finalName) => void bring(cb.from, finalName, cb.op),
+      // Replace: the adapter's mv/cp refuse to clobber, so remove the target first.
+      () =>
+        void (async () => {
+          if (await runVoid((e) => removePath(session.sessionId, joinPath(path, cb.name), e)))
+            await bring(cb.from, cb.name, cb.op);
+        })(),
     );
   }
 
@@ -175,15 +221,38 @@ export function FilesApp({
     if (!dialog) return;
     const value = dialog.value.trim();
     if (!value || value.includes('/')) return;
-    const dest = joinPath(path, value);
     const d = dialog;
-    if (d.mode === 'newFolder') void runVoid((e) => makeDir(session.sessionId, dest, e));
-    else if (d.mode === 'newFile') void runVoid((e) => createFile(session.sessionId, dest, e));
-    else if (d.target) {
-      const from = joinPath(path, d.target.name);
-      void runVoid((e) => movePath(session.sessionId, from, dest, e));
-    }
+    const make = (name: string): Promise<boolean> => {
+      const dest = joinPath(path, name);
+      if (d.mode === 'newFolder') return runVoid((e) => makeDir(session.sessionId, dest, e));
+      if (d.mode === 'newFile') return runVoid((e) => createFile(session.sessionId, dest, e));
+      const from = joinPath(path, d.target?.name ?? '');
+      return runVoid((e) => movePath(session.sessionId, from, dest, e));
+    };
     setDialog(null);
+    // Rename onto the same name is a no-op; otherwise resolve any collision.
+    if (d.mode === 'rename' && d.target?.name === value) return;
+    withConflict(
+      value,
+      (finalName) => void make(finalName),
+      () =>
+        void (async () => {
+          if (await runVoid((e) => removePath(session.sessionId, joinPath(path, value), e)))
+            await make(value);
+        })(),
+    );
+  }
+
+  async function uploadFile(file: File): Promise<void> {
+    const base64 = await fileToBase64(file);
+    const write = (name: string) =>
+      runVoid((e) => writeFile(session.sessionId, joinPath(path, name), base64, e));
+    // writeFile truncates, so Replace just writes to the original name.
+    withConflict(
+      file.name,
+      (finalName) => void write(finalName),
+      () => void write(file.name),
+    );
   }
 
   const sorted = [...entries].sort((a, b) => {
@@ -250,12 +319,32 @@ export function FilesApp({
           variant="ghost"
           size="icon"
           className="size-7"
+          onClick={() => fileInputRef.current?.click()}
+          aria-label={t('files.upload')}
+        >
+          <Upload className="size-4" aria-hidden />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
           onClick={() => openTerminal(path)}
           aria-label={t('files.openInTerminal')}
         >
           <TerminalSquare className="size-4" aria-hidden />
         </Button>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = ''; // allow re-selecting the same file
+          if (file) void uploadFile(file);
+        }}
+      />
 
       {(error || actionError) && (
         <p className="px-3 py-1.5 text-xs text-destructive">{error ?? actionError}</p>
@@ -366,6 +455,9 @@ export function FilesApp({
             <ContextMenuItem onSelect={() => setDialog({ mode: 'newFile', value: '' })}>
               <FilePlus className="text-muted-foreground" /> {t('files.newFile')}
             </ContextMenuItem>
+            <ContextMenuItem onSelect={() => fileInputRef.current?.click()}>
+              <Upload className="text-muted-foreground" /> {t('files.upload')}
+            </ContextMenuItem>
             {clipboard && (
               <ContextMenuItem onSelect={paste}>
                 <ClipboardPaste className="text-muted-foreground" /> {t('files.paste')}
@@ -447,15 +539,53 @@ export function FilesApp({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Name-conflict resolution (FR-028). */}
+      <AlertDialog open={conflict !== null} onOpenChange={(open) => !open && setConflict(null)}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('files.conflictTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('files.conflictBody', { name: conflict?.name ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('files.cancel')}</AlertDialogCancel>
+            <Button variant="outline" onClick={() => conflict?.onKeepBoth()}>
+              {t('files.keepBoth')}
+            </Button>
+            <Button variant="destructive" onClick={() => conflict?.onReplace()}>
+              {t('files.replace')}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Privilege-elevation modals (FR-029/093..095) for denied file operations. */}
       {elevationDialogs}
     </div>
   );
 }
 
-/** Insert " copy" before the extension to dodge a name collision on paste. */
-function bumpCopy(name: string): string {
+/** A name not already in `existing`, suffixing " (n)" before the extension. */
+function uniqueName(name: string, existing: Set<string>): string {
+  if (!existing.has(name)) return name;
   const dot = name.lastIndexOf('.');
-  if (dot <= 0) return `${name} copy`;
-  return `${name.slice(0, dot)} copy${name.slice(dot)}`;
+  const base = dot > 0 ? name.slice(0, dot) : name;
+  const ext = dot > 0 ? name.slice(dot) : '';
+  let n = 2;
+  while (existing.has(`${base} (${n})${ext}`)) n += 1;
+  return `${base} (${n})${ext}`;
+}
+
+/** Read a browser File as base64 (without the `data:…;base64,` prefix). */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result);
+      resolve(result.slice(result.indexOf(',') + 1));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('read failed'));
+    reader.readAsDataURL(file);
+  });
 }
