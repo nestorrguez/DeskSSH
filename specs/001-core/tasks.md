@@ -131,9 +131,46 @@ From the `Observaciones/` usage diary. **Strict spec-first applies from now on**
 - [x] **M4.8** **Stallman → Monaco** code editor with syntax highlighting by file
       type (lazy-loaded). → FR-072 — `0.1.6`
 
+## M5 — Process/service control in Monitor + shared clipboard — TODO
+
+From 2026-06-27 feedback; specs written first (spec §6 FR-051..053, FR-110..112;
+`plan.md §4`). Brings process management forward into the System monitor (no
+separate Processes app) and adds a host↔client clipboard for text + files.
+
+### Core (capability contract)
+
+- [ ] **M5.1** Implement `listProcesses()` in the Debian adapter via machine-readable
+      `ps -eo pid,user,pcpu,pmem,comm,args` → `Process[]`, with raw-output fallback.
+      → FR-051, Art. 6/7
+- [ ] **M5.2** Add `signalProcess(pid, signal)` to the contract + Debian adapter
+      (`kill -SIGTERM|-SIGKILL|-SIGHUP`). → FR-052
+- [ ] **M5.3** Add `serviceAction(name, action)` (start/stop/restart via
+      `systemctl`, state via `systemctl show`) → `ServiceState`. → FR-053
+
+### Server (gateway)
+
+- [ ] **M5.4** Endpoints for `listProcesses`, `signalProcess`, `serviceAction`
+      (session-scoped, confirmation enforced client-side) + tests. → FR-051/052/053
+- [ ] **M5.5** Session-scoped **text clipboard** buffer in the gateway for the
+      DeskSSH-clipboard text path. → FR-110
+
+### Web (UI)
+
+- [ ] **M5.6** **System monitor**: process table (PID/user/%CPU/%MEM/command, sort + filter, periodic refresh) with Stop (SIGTERM→SIGKILL) / Reload (SIGHUP) and,
+      for service-backed processes, Restart — all behind confirmation. →
+      FR-051/052/053/090
+- [ ] **M5.7** **Shared clipboard**: two Copy (Copy / Copy to my computer) and two
+      Paste (Paste / Paste from my computer). Text via `navigator.clipboard`; files
+      via download/upload (FR-023). Surfaced in the file manager + text selections. →
+      FR-110/111/112
+
+**M5 done when:** processes can be listed, signalled and (for services) restarted
+from the monitor with confirmations, against a real Debian 13 host; and text/files
+move both ways through the shared clipboard. Validate via the harness + the test VMs.
+
 ## Next / post-v1
 
 The near-term technical backlog (handler-registry unification, FR-071 close-guard,
-file upload) and the post-v1 roadmap (admin apps, host tiers, credential store,
-hosted deployment) are tracked in the **private roadmap**, not here. This file lists
-only shipped/in-progress work.
+standalone file upload) and the post-v1 roadmap (Log viewer, Packages, a full
+dedicated Services app, host tiers, credential store, hosted deployment) are tracked
+in the **private roadmap**, not here. This file lists only shipped/in-progress work.

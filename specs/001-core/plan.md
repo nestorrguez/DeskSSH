@@ -112,7 +112,13 @@ system's "intermediate language" (an _intermediate representation_, IR). Two pie
      `remove` — each `→ void` with the uniform ok/failed/unsupported result. The
      Debian adapter implements them with POSIX commands (`mkdir -p`, `touch`,
      `mv -n`, `cp -a -n`, `rm -rf`); `move`/`copy` use `-n` so they never clobber.
-   - `serviceAction(name, action) → ServiceState`
+   - **Process & service control** (FR-051/052/053, graduated from the private
+     roadmap 2026-06-27): `listProcesses() → Process[]` (`ps -eo …`),
+     `signalProcess(pid, signal) → void` (`kill -SIGTERM|-SIGKILL|-SIGHUP`), and
+     `serviceAction(name, action) → ServiceState` (`systemctl start|stop|restart`,
+     `systemctl show` for state). The latter is what makes "restart" meaningful for
+     a daemon; a generic process only gets signals. All destructive actions confirm
+     (FR-090).
 
    The value is in the **output type**: if an app knows `listDir` returns a
    `FileEntry[]`, it no longer cares how it was obtained nor on which platform.
@@ -144,7 +150,9 @@ client**:
   **Documents** (rich text, TipTap, stored as HTML, FR-073).
 - **Viewers** (image FR-100 / PDF FR-101) = `readFile` + client-side rendering in
   the browser (no remote render).
-- **Monitor** = `listProcesses`/`systemMetrics` by _polling_, not a live `top`.
+- **Monitor** = `systemMetrics` + `listProcesses` by _polling_, not a live `top`;
+  it also hosts process actions (`signalProcess`) and basic service control
+  (`serviceAction`) — confirmed before running (FR-051/052/053).
 - The **only** deliberate exception is the **terminal** app, which does expose the
   raw shell (there the user sees `bash`/`PowerShell`/`csh`); it can also start in a
   given directory (FR-032) by issuing `cd` as the first PTY input.
@@ -187,6 +195,26 @@ popularity rather than difficulty, is tracked in the **private roadmap**.
   so "Open on the client" resolves as a **plain download** in v1 (FR-025 / spec
   §9.8). It cannot force the OS's default app; type-aware inline opening on the
   client may be revisited post-v1.
+
+### Shared clipboard: host ↔ client (FR-110..112)
+
+Two clipboards, bridged, for both text and files — easing ad-hoc transfer beyond a
+shared folder:
+
+- **DeskSSH clipboard (server-side, session-scoped):** _Copy_/_Paste_ within
+  DeskSSH. For files it is the file manager's cut/copy/paste over the move/copy
+  capabilities (FR-021); for text it is a small per-session buffer in the gateway.
+- **Client clipboard (the browser):** _Copy to my computer_ / _Paste from my
+  computer_.
+  - **Text** uses the Web **Clipboard API** (`navigator.clipboard.writeText` /
+    `readText`). It needs a user gesture and may prompt for permission; over plain
+    HTTP it is restricted to secure contexts (localhost counts as secure), so the
+    self-hosted/LAN case works, a non-TLS remote host may not.
+  - **Files** cannot be placed on / read from the OS clipboard by a web app, so
+    "to/from my computer" is realised as **download / upload** (FR-023): copy-to =
+    download the bytes; paste-from = upload a picked file (`writeFile`).
+- The four actions surface in the file manager (and where text selection exists),
+  presented as two _Copy_ and two _Paste_ entries.
 
 ### Parsers and resilience
 

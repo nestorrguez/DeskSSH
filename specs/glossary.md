@@ -32,8 +32,10 @@ metaphor** and **system commands**— so a shared language avoids confusion.
 | Code editor (Stallman)        | read via `readFile`, save via `writeFile`; Monaco GUI |
 | Document editor (Documents)   | read/save via `readFile`/`writeFile`; stored as HTML  |
 | Image / PDF viewer            | `readFile` (base64) → rendered in the browser         |
-| Task manager                  | `ps -eo`, `top -b -n1`, `kill`                        |
+| Clipboard to / from my PC     | text: `navigator.clipboard`; files: download / upload |
+| List processes (Monitor)      | `ps -eo pid,user,%cpu,%mem,comm,args`                 |
+| Stop / reload a process       | `kill -SIGTERM` / `-SIGKILL` / `-SIGHUP`              |
 | System monitor                | `free`, `df`, `uptime`, `cat /proc/...`               |
-| Service manager               | `systemctl list-units`, `systemctl start/stop/status` |
+| Restart a service             | `systemctl start/stop/restart`, `systemctl show`      |
 | Log viewer                    | `journalctl`, `tail -f` over a channel                |
 | Network connections           | `ss -tulpn`, `ip a`                                   |

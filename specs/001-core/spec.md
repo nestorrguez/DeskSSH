@@ -77,9 +77,11 @@ into commands executed on the host. No agents, no streaming, and with
 
 > **v1 app scope (focused cut):** Connection/hosts, Desktop shell, File manager,
 > **Editors** (Stallman = code, Documents = rich text), Terminal, **Image/PDF
-> viewers** and **System monitor**. This document specifies **only what ships**;
-> post-v1 apps (Processes, Services, Log viewer, Packages) and their FRs live in the
-> private roadmap, and graduate back here when built.
+> viewers**, **System monitor** (now also process + service control) and a
+> **shared clipboard** (host ↔ client). This document specifies **only what ships**
+> or is committed-next; the remaining post-v1 apps (Log viewer, Packages, a full
+> dedicated Services app) and their FRs live in the private roadmap and graduate
+> back here when built.
 
 ### Connection and hosts
 
@@ -145,7 +147,20 @@ into commands executed on the host. No agents, no streaming, and with
 
 ### App: System monitor
 
+The monitor is also where running **processes** are inspected and acted on
+(brought forward from the post-v1 "Processes" app per 2026-06-27 feedback) — no
+separate Processes app.
+
 - **FR-050** Show CPU, memory, disk and uptime, with periodic refresh.
+- **FR-051** **List processes** with PID, user, %CPU, %memory and command, with
+  periodic refresh and sort/filter; shown inside the System monitor.
+- **FR-052** **Signal a process:** _Stop_ (SIGTERM, escalating to SIGKILL if it
+  does not exit) and _Reload_ (SIGHUP). Every signal asks for confirmation (Art. 4).
+- **FR-053** **Service control:** start, stop and **restart** a service via the
+  init system (systemd first), with mandatory confirmation. This is what makes
+  "restart" meaningful for a process that belongs to a service (a generic process
+  has no well-defined restart). Resolved (2026-06-27): service control is included
+  so restart works for daemons.
 
 ### App: Editors (code + documents)
 
@@ -170,6 +185,28 @@ The GUI is synthesised on the client (Art. 10): viewers read the file bytes via
 - **FR-100** **Image viewer:** display PNG, JPEG, GIF (including animated) and WebP,
   with a fit / actual-size toggle.
 - **FR-101** **PDF viewer:** display PDF files with page navigation and zoom.
+
+### Shared clipboard (host ↔ client)
+
+A clipboard that moves **both text and files** between the remote host and the
+user's local machine ("the client"), to ease ad-hoc transfer better than a shared
+folder. Four actions — two copy, two paste:
+
+- **FR-110** **Copy / Paste (DeskSSH clipboard):** copy/paste **within DeskSSH**, a
+  session-scoped clipboard held on the server. For files this is the file manager's
+  cut/copy/paste (FR-021); for text, the copied text is held for pasting elsewhere
+  inside DeskSSH.
+- **FR-111** **Copy to my computer:** put the item in the **client's** clipboard —
+  **text** via the browser clipboard (`navigator.clipboard`), **files** by
+  downloading them to the client (FR-023).
+- **FR-112** **Paste from my computer:** take from the **client** — **text** from
+  the browser clipboard, **files** by uploading the chosen file to the host (FR-023).
+
+> Resolved (2026-06-27): the clipboard carries **both** text and files. Browser
+> reality: clipboard access is text-oriented and may require a user gesture/
+> permission; a web app cannot read/write arbitrary files on the OS clipboard, so
+> file transfer to/from the client is realised as **download/upload**, not a true
+> OS file-clipboard. See §9.9.
 
 ### Cross-cutting
 
@@ -220,3 +257,10 @@ The GUI is synthesised on the client (Art. 10): viewers read the file bytes via
 8. ~~FR-025 "Open on the client"~~ → **Resolved (2026-06-27): plain download** in
    v1 (save to the user's machine via the browser). Type-aware inline opening on
    the client may be revisited post-v1.
+9. ~~Shared clipboard scope~~ → **Resolved (2026-06-27): both text and files**
+   (FR-110..112). Text uses the browser clipboard; files use download/upload since
+   a web app cannot touch the OS file clipboard.
+10. ~~Process "restart"~~ → **Resolved (2026-06-27): include service control**
+    (FR-053): generic processes get signals (stop/reload, FR-052); true restart is
+    done via the service manager (systemctl). Process list lives in the System
+    monitor (FR-051), not a separate app.
