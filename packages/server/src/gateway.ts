@@ -76,6 +76,19 @@ function asString(obj: Record<string, unknown>, key: string): string {
   return value;
 }
 
+/** Validate that a body field is one of an allowed set of string literals. */
+function asOneOf<const T extends readonly string[]>(
+  obj: Record<string, unknown>,
+  key: string,
+  allowed: T,
+): T[number] {
+  const value = obj[key];
+  if (typeof value !== 'string' || !allowed.includes(value)) {
+    throw new HttpError(400, `Invalid "${key}": expected one of ${allowed.join(', ')}`);
+  }
+  return value as T[number];
+}
+
 /** Build (but do not start) the gateway HTTP server. */
 export function createGateway(deps: GatewayDeps = {}): Server {
   const manager = deps.manager ?? new SessionManager();
@@ -215,6 +228,29 @@ async function handle(
     const body = (await readJsonBody(req)) as Record<string, unknown>;
     const entry = requireSession(manager, body);
     return sendJson(res, 200, { result: await entry.adapter.remove(asString(body, 'path')) });
+  }
+
+  if (route === 'POST /api/processes') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    return sendJson(res, 200, { result: await entry.adapter.listProcesses() });
+  }
+
+  if (route === 'POST /api/signal') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    const pid = Number(body['pid']);
+    if (!Number.isInteger(pid) || pid <= 0) throw new HttpError(400, 'Invalid "pid"');
+    const signal = asOneOf(body, 'signal', ['TERM', 'KILL', 'HUP'] as const);
+    return sendJson(res, 200, { result: await entry.adapter.signalProcess(pid, signal) });
+  }
+
+  if (route === 'POST /api/service') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    const action = asOneOf(body, 'action', ['start', 'stop', 'restart'] as const);
+    const result = await entry.adapter.serviceAction(asString(body, 'name'), action);
+    return sendJson(res, 200, { result });
   }
 
   sendJson(res, 404, { error: `No route for ${route}` });

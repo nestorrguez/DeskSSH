@@ -66,6 +66,13 @@ const fakeOpener: SessionOpener = (req) => {
       files.delete(path);
       return Promise.resolve(ok(undefined, ''));
     },
+    listProcesses: () =>
+      Promise.resolve(
+        ok([{ pid: 1, user: 'root', cpu: 0.1, mem: 0.4, command: '/sbin/init' }], 'raw'),
+      ),
+    signalProcess: (_pid: number, _signal: string) => Promise.resolve(ok(undefined, '')),
+    serviceAction: (name: string, _action: string) =>
+      Promise.resolve(ok({ name, active: true, enabled: true, status: 'running' }, 'raw')),
   } as unknown as Capabilities;
   return Promise.resolve({
     host: `${req.username}@${req.host}`,
@@ -209,5 +216,27 @@ describe('gateway', () => {
   it('mutation endpoints require a known session', async () => {
     const missing = await post('/api/mkdir', { sessionId: 'nope', path: '/tmp/x' });
     expect(missing.status).toBe(404);
+  });
+
+  it('processes/signal/service route to the adapter and validate input', async () => {
+    const sessionId = await connectSession();
+
+    const procs = await post('/api/processes', { sessionId });
+    expect(procs.json.result.kind).toBe('ok');
+    expect(procs.json.result.value[0].command).toBe('/sbin/init');
+
+    expect(
+      (await post('/api/signal', { sessionId, pid: 1, signal: 'TERM' })).json.result.kind,
+    ).toBe('ok');
+    const svc = await post('/api/service', { sessionId, name: 'ssh', action: 'restart' });
+    expect(svc.json.result.kind).toBe('ok');
+    expect(svc.json.result.value.status).toBe('running');
+
+    // Validation: bad signal / action / pid → 400.
+    expect((await post('/api/signal', { sessionId, pid: 1, signal: 'BOOM' })).status).toBe(400);
+    expect((await post('/api/signal', { sessionId, pid: 0, signal: 'TERM' })).status).toBe(400);
+    expect((await post('/api/service', { sessionId, name: 'ssh', action: 'nuke' })).status).toBe(
+      400,
+    );
   });
 });
