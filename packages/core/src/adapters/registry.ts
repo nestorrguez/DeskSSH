@@ -23,6 +23,7 @@ export function createUnsupportedAdapter(reason: string): Capabilities {
     copy: fail,
     remove: fail,
     systemMetrics: fail,
+    systemInfo: fail,
     listProcesses: fail,
     signalProcess: fail,
     serviceAction: fail,

@@ -49,6 +49,28 @@ export interface ServiceState {
   readonly status: string;
 }
 
+/** A fastfetch-style snapshot of host facts (System info, FR-016). */
+export interface SystemInfo {
+  readonly hostname: string;
+  /** Distro pretty name, e.g. "Debian GNU/Linux 13 (trixie)". */
+  readonly prettyName: string;
+  /** Kernel release (`uname -r`). */
+  readonly kernel: string;
+  readonly uptimeSeconds: number;
+  /** Count of installed packages, or 0 if unknown. */
+  readonly packages: number;
+  /** Login shell name, e.g. "bash". */
+  readonly shell: string;
+  readonly cpuModel: string;
+  readonly cpuCount: number;
+  readonly memTotalBytes: number;
+  readonly memUsedBytes: number;
+  readonly diskTotalBytes: number;
+  readonly diskUsedBytes: number;
+  /** First non-loopback IPv4, or "" if unknown. */
+  readonly localIp: string;
+}
+
 /** A point-in-time snapshot of system resource usage. */
 export interface SystemMetrics {
   /** System uptime in seconds. */

@@ -1,41 +1,74 @@
 import { useEffect, useState } from 'react';
-import { listDir, type ListDirResponse } from '@/api/gateway';
+import { Server } from 'lucide-react';
+import type { SystemInfo } from '@deskssh/core';
+import { getSystemInfo } from '@/api/gateway';
 import type { AppContext } from '../types';
+import { formatBytes, formatUptime } from './lib';
 
+// System info — a fastfetch-style host snapshot (FR-016), gathered agentlessly.
 export function SystemApp({ t, session }: AppContext) {
-  const [data, setData] = useState<ListDirResponse | null>(null);
+  const [info, setInfo] = useState<SystemInfo | null>(null);
+  const [error, setError] = useState(false);
+
   useEffect(() => {
     let active = true;
-    listDir(session.sessionId)
-      .then((res) => active && setData(res))
-      .catch(() => {});
+    getSystemInfo(session.sessionId)
+      .then(({ result }) => {
+        if (!active) return;
+        if (result.kind === 'ok') setInfo(result.value);
+        else setError(true);
+      })
+      .catch(() => active && setError(true));
     return () => {
       active = false;
     };
   }, [session.sessionId]);
 
+  const rows: Array<[string, string]> = info
+    ? [
+        [t('system.os'), info.prettyName || session.os.family],
+        [t('system.kernel'), info.kernel],
+        [t('system.uptime'), formatUptime(info.uptimeSeconds)],
+        [t('system.packages'), `${info.packages} (dpkg)`],
+        [t('system.shell'), info.shell],
+        [t('system.cpu'), `${info.cpuModel}${info.cpuCount ? ` (${info.cpuCount})` : ''}`],
+        [
+          t('system.memory'),
+          `${formatBytes(info.memUsedBytes)} / ${formatBytes(info.memTotalBytes)}`,
+        ],
+        [
+          t('system.disk'),
+          `${formatBytes(info.diskUsedBytes)} / ${formatBytes(info.diskTotalBytes)}`,
+        ],
+        [t('system.ip'), info.localIp || '—'],
+        [t('system.home'), session.home],
+      ]
+    : [];
+
   return (
-    <div className="flex flex-col gap-4 p-4 text-sm">
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
-        <dt className="text-muted-foreground">{t('system.os')}</dt>
-        <dd>{session.os.prettyName ?? session.os.family}</dd>
-        <dt className="text-muted-foreground">{t('system.host')}</dt>
-        <dd>{session.host}</dd>
-        <dt className="text-muted-foreground">{t('system.home')}</dt>
-        <dd className="font-mono text-xs">{session.home}</dd>
-      </dl>
-      <div>
-        <h3 className="mb-1 text-xs font-medium text-muted-foreground">
-          {t('system.transparency')}
-        </h3>
-        <ul className="divide-y divide-border overflow-hidden rounded-md border font-mono text-xs">
-          {(data?.transparency ?? []).map((rec) => (
-            <li key={rec.id} className="flex items-center gap-2 px-3 py-1.5">
-              <span className="text-primary">[{rec.exitCode ?? 'ERR'}]</span>
-              <code className="break-all">{rec.command}</code>
-            </li>
+    <div className="flex h-full items-start gap-5 overflow-auto p-5 font-mono text-sm">
+      {/* "Logo" panel (no ASCII art dependency). */}
+      <div className="grid size-28 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+        <Server className="size-14" aria-hidden />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-primary">{session.host}</div>
+        <div className="mb-2 text-muted-foreground">
+          {'─'.repeat(Math.max(8, session.host.length))}
+        </div>
+
+        {error && <p className="text-sm text-destructive">{t('system.unavailable')}</p>}
+        {!error && !info && <p className="text-muted-foreground">…</p>}
+
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+          {rows.map(([k, v]) => (
+            <div key={k} className="contents">
+              <dt className="font-semibold text-primary">{k}</dt>
+              <dd className="break-all text-foreground">{v}</dd>
+            </div>
           ))}
-        </ul>
+        </dl>
       </div>
     </div>
   );

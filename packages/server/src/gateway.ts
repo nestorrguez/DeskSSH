@@ -304,6 +304,18 @@ async function handle(
     return sendJson(res, 200, { privilege: await detectPrivilege(entry.executor) });
   }
 
+  if (route === 'POST /api/systeminfo') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    return sendJson(res, 200, { result: await entry.adapter.systemInfo() });
+  }
+
+  if (route === 'POST /api/transparency') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    return sendJson(res, 200, { transparency: entry.log.list() });
+  }
+
   sendJson(res, 404, { error: `No route for ${route}` });
 }
 

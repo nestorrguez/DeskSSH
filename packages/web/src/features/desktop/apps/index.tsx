@@ -7,6 +7,7 @@ import {
   PenLine,
   Image,
   FileType,
+  History,
   Heart,
 } from 'lucide-react';
 import type { Translator } from '@/i18n';
@@ -19,6 +20,7 @@ import { DocumentsApp } from './DocumentsApp';
 import { TerminalApp } from './TerminalApp';
 import { ImageViewerApp } from './ImageViewerApp';
 import { PdfViewerApp } from './PdfViewerApp';
+import { CommandHistoryApp } from './CommandHistoryApp';
 import { CreditsApp } from './CreditsApp';
 
 /** The apps available in the launcher. */
@@ -56,8 +58,15 @@ export function getApps(t: Translator): AppDefinition[] {
       id: 'system',
       title: t('apps.system'),
       icon: Info,
-      defaultSize: { w: 560, h: 460 },
+      defaultSize: { w: 520, h: 380 },
       render: (ctx) => <SystemApp {...ctx} />,
+    },
+    {
+      id: 'history',
+      title: t('apps.history'),
+      icon: History,
+      defaultSize: { w: 600, h: 440 },
+      render: (ctx) => <CommandHistoryApp {...ctx} />,
     },
     {
       id: 'terminal',

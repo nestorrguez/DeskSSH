@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { LayoutGrid, LogOut, Server } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Translator } from '@/i18n';
+import type { SessionInfo } from '@/api/gateway';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -12,7 +13,7 @@ interface TaskbarProps {
   apps: AppDefinition[];
   windows: WindowState[];
   activeId: string | null;
-  host: string;
+  session: SessionInfo;
   onLaunch: (app: AppDefinition) => void;
   onSelectWindow: (id: string) => void;
   onDisconnect: () => void;
@@ -36,39 +37,98 @@ export function Taskbar({
   apps,
   windows,
   activeId,
-  host,
+  session,
   onLaunch,
   onSelectWindow,
   onDisconnect,
 }: TaskbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const host = session.host;
+  const os = session.os.prettyName ?? session.os.family;
 
   return (
     <footer className="flex h-12 shrink-0 items-center gap-2 border-t bg-card/80 px-2 backdrop-blur">
+      {/* Start menu — Windows-XP-style arrangement (header / apps + session / footer),
+          DeskSSH's flat visual style (FR-011). */}
       <Popover open={menuOpen} onOpenChange={setMenuOpen}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-2">
             <LayoutGrid className="size-4" aria-hidden /> {t('desktop.start')}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" side="top" className="w-56 p-2">
-          <div className="grid grid-cols-2 gap-1">
-            {apps.map((app) => {
-              const Icon = app.icon;
-              return (
-                <button
-                  key={app.id}
-                  className="flex flex-col items-center gap-2 rounded-md p-3 text-center text-xs hover:bg-accent"
-                  onClick={() => {
-                    onLaunch(app);
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Icon className="size-6 text-muted-foreground" aria-hidden />
-                  {app.title}
-                </button>
-              );
-            })}
+        <PopoverContent align="start" side="top" className="w-[26rem] overflow-hidden p-0">
+          {/* Header: session identity */}
+          <div className="flex items-center gap-3 bg-primary/10 px-4 py-3">
+            <div className="grid size-9 shrink-0 place-items-center rounded-md bg-primary/20 text-primary">
+              <Server className="size-5" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold">{host}</div>
+              <div className="truncate text-xs text-muted-foreground">{os}</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-[1fr_10.5rem]">
+            {/* Left: all apps */}
+            <div className="p-2">
+              <div className="px-2 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                {t('desktop.apps')}
+              </div>
+              <div className="max-h-72 overflow-auto">
+                {apps.map((app) => {
+                  const Icon = app.icon;
+                  return (
+                    <button
+                      key={app.id}
+                      className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"
+                      onClick={() => {
+                        onLaunch(app);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                      <span className="truncate">{app.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right: session / places */}
+            <div className="border-l bg-muted/30 p-3">
+              <div className="pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+                {t('desktop.session')}
+              </div>
+              <dl className="flex flex-col gap-2 text-xs">
+                <div>
+                  <dt className="text-muted-foreground">{t('system.host')}</dt>
+                  <dd className="truncate">{host}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">{t('system.os')}</dt>
+                  <dd className="truncate">{os}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">{t('system.home')}</dt>
+                  <dd className="truncate font-mono">{session.home}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+
+          {/* Footer: disconnect */}
+          <div className="border-t p-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2 text-destructive hover:text-destructive"
+              onClick={() => {
+                setMenuOpen(false);
+                onDisconnect();
+              }}
+            >
+              <LogOut className="size-4" aria-hidden /> {t('desktop.disconnect')}
+            </Button>
           </div>
         </PopoverContent>
       </Popover>

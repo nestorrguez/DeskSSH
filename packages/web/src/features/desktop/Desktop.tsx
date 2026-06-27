@@ -137,7 +137,7 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
         apps={apps}
         windows={wm.windows}
         activeId={activeId}
-        host={session.host}
+        session={session}
         onLaunch={wm.openApp}
         onSelectWindow={wm.focus}
         onDisconnect={onDisconnect}

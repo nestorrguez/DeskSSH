@@ -17,6 +17,7 @@ import type {
   ProcessSignal,
   ServiceAction,
   ServiceState,
+  SystemInfo,
   SystemMetrics,
 } from '../contract/types.js';
 import { quote } from './shell.js';
@@ -175,6 +176,71 @@ export function parseProcesses(stdout: string): Process[] {
     .map(parseProcessLine);
 }
 
+// One round trip of fastfetch-style facts, delimited by ===NAME=== markers (FR-016).
+const SYSINFO_COMMAND = [
+  'echo ===HOST===; hostname',
+  'echo ===OS===; . /etc/os-release 2>/dev/null; echo "$PRETTY_NAME"',
+  'echo ===KERNEL===; uname -r',
+  'echo ===UPTIME===; cat /proc/uptime',
+  'echo ===PKGS===; dpkg --list 2>/dev/null | grep -c "^ii"',
+  'echo ===SHELL===; echo "${SHELL##*/}"',
+  'echo ===CPU===; grep -m1 "model name" /proc/cpuinfo | cut -d: -f2; grep -c "^processor" /proc/cpuinfo',
+  'echo ===MEM===; grep -E "MemTotal|MemAvailable" /proc/meminfo',
+  'echo ===DISK===; df -P / | tail -1',
+  'echo ===IP===; hostname -I 2>/dev/null',
+].join('; ');
+
+/** Split marker-delimited (`===NAME===`) output into a section map. */
+function sectionsOf(stdout: string): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  let current = '';
+  for (const line of stdout.split('\n')) {
+    const marker = /^===(\w+)===$/.exec(line);
+    if (marker?.[1]) {
+      current = marker[1];
+      out.set(current, []);
+    } else if (current) {
+      out.get(current)?.push(line);
+    }
+  }
+  return out;
+}
+
+/** Parse the combined {@link SYSINFO_COMMAND} output into typed host facts. */
+export function parseSystemInfo(stdout: string): SystemInfo {
+  const s = sectionsOf(stdout);
+  const line = (k: string, i = 0): string => (s.get(k)?.[i] ?? '').trim();
+
+  const mem = new Map<string, number>();
+  for (const l of s.get('MEM') ?? []) {
+    const m = /^(\w+):\s+(\d+)\s*kB$/.exec(l.trim());
+    if (m?.[1] && m[2]) mem.set(m[1], Number.parseInt(m[2], 10) * 1024);
+  }
+  const memTotal = mem.get('MemTotal') ?? 0;
+  const memAvail = mem.get('MemAvailable') ?? 0;
+
+  const disk = line('DISK').split(/\s+/);
+  const ip = line('IP').split(/\s+/)[0] ?? '';
+
+  if (!line('HOST') && memTotal === 0) throw new Error('Empty system-info output');
+
+  return {
+    hostname: line('HOST'),
+    prettyName: line('OS'),
+    kernel: line('KERNEL'),
+    uptimeSeconds: Math.round(Number.parseFloat(line('UPTIME').split(/\s+/)[0] ?? '0') || 0),
+    packages: Number.parseInt(line('PKGS'), 10) || 0,
+    shell: line('SHELL'),
+    cpuModel: line('CPU'),
+    cpuCount: Number.parseInt(line('CPU', 1), 10) || 1,
+    memTotalBytes: memTotal,
+    memUsedBytes: Math.max(0, memTotal - memAvail),
+    diskTotalBytes: (Number.parseInt(disk[1] ?? '0', 10) || 0) * 1024,
+    diskUsedBytes: (Number.parseInt(disk[2] ?? '0', 10) || 0) * 1024,
+    localIp: ip,
+  };
+}
+
 /** Parse `systemctl show <name> -p ActiveState,UnitFileState,SubState` output. */
 export function parseServiceState(name: string, stdout: string): ServiceState {
   const kv = new Map<string, string>();
@@ -251,6 +317,10 @@ export class DebianAdapter implements Capabilities {
 
   systemMetrics(): Promise<CapabilityResult<SystemMetrics>> {
     return runParsed(this.exec, METRICS_COMMAND, parseSystemMetrics);
+  }
+
+  systemInfo(): Promise<CapabilityResult<SystemInfo>> {
+    return runParsed(this.exec, SYSINFO_COMMAND, parseSystemInfo);
   }
 
   listProcesses(): Promise<CapabilityResult<readonly Process[]>> {

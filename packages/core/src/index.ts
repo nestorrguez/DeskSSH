@@ -23,6 +23,7 @@ export type {
   ProcessSignal,
   ServiceAction,
   ServiceState,
+  SystemInfo,
   SystemMetrics,
 } from './contract/types.js';
 export { ok, degraded, unsupported, runParsed, type CapabilityResult } from './contract/result.js';

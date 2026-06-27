@@ -12,6 +12,7 @@ import type {
   ProcessSignal,
   ServiceAction,
   ServiceState,
+  SystemInfo,
   SystemMetrics,
 } from '@deskssh/core';
 
@@ -170,4 +171,16 @@ export function serviceAction(
 
 export function getPrivilege(sessionId: string): Promise<{ privilege: PrivilegeInfo }> {
   return post('/api/privilege', { sessionId });
+}
+
+export function getSystemInfo(
+  sessionId: string,
+): Promise<{ result: CapabilityResult<SystemInfo> }> {
+  return post('/api/systeminfo', { sessionId });
+}
+
+export function getTransparency(
+  sessionId: string,
+): Promise<{ transparency: readonly CommandRecord[] }> {
+  return post('/api/transparency', { sessionId });
 }

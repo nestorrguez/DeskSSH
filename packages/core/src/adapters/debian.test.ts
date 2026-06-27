@@ -7,6 +7,7 @@ import {
   parseSystemMetrics,
   parseProcessLine,
   parseServiceState,
+  parseSystemInfo,
 } from './debian.js';
 import { FakeExecutor, okResult } from '../test/fake-executor.js';
 
@@ -235,5 +236,42 @@ describe('parseProcessLine / parseServiceState', () => {
       'ActiveState=active\nUnitFileState=enabled\nSubState=running',
     );
     expect(s).toEqual({ name: 'ssh', active: true, enabled: true, status: 'running' });
+  });
+
+  it('parses the combined system-info snapshot', () => {
+    const out = [
+      '===HOST===',
+      'deskssh-xfce',
+      '===OS===',
+      'Debian GNU/Linux 13 (trixie)',
+      '===KERNEL===',
+      '6.12.0-amd64',
+      '===UPTIME===',
+      '3600.50 7000.00',
+      '===PKGS===',
+      '742',
+      '===SHELL===',
+      'bash',
+      '===CPU===',
+      ' Intel(R) Core(TM) i7',
+      '8',
+      '===MEM===',
+      'MemTotal:       4000000 kB',
+      'MemAvailable:   1500000 kB',
+      '===DISK===',
+      '/dev/vda1 20000000 8000000 11000000 43% /',
+      '===IP===',
+      '192.168.122.195 10.0.0.5',
+    ].join('\n');
+    const info = parseSystemInfo(out);
+    expect(info.hostname).toBe('deskssh-xfce');
+    expect(info.prettyName).toBe('Debian GNU/Linux 13 (trixie)');
+    expect(info.uptimeSeconds).toBe(3601);
+    expect(info.packages).toBe(742);
+    expect(info.cpuModel).toBe('Intel(R) Core(TM) i7');
+    expect(info.cpuCount).toBe(8);
+    expect(info.memUsedBytes).toBe((4000000 - 1500000) * 1024);
+    expect(info.diskTotalBytes).toBe(20000000 * 1024);
+    expect(info.localIp).toBe('192.168.122.195');
   });
 });

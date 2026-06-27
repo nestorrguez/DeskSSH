@@ -229,14 +229,16 @@ From 2026-06-27 in-app testing. Specced first (spec §6 FR-010/011/013/016).
 
 - [x] **M8.1** Fix pop-up stacking: context menus / dialogs / launcher render above
       windows (`isolate` on the windows container caps their growing z-index). → FR-010
-- [ ] **M8.2** `systemInfo()` capability (Debian adapter, one round trip) + gateway
-      endpoint + client; revamp **System info** into a fastfetch-style snapshot. → FR-016
-- [ ] **M8.3** New **Command history** app showing the transparency log
-      (`/api/transparency`); remove the command list from System info. → FR-013, Art. 3
-- [ ] **M8.4** Redesign the **launcher** to a Windows-XP-style arrangement (header
-      with session identity, app list, places/session column, Disconnect footer) —
-      arrangement only, keep the flat visual style. → FR-011
-- [ ] **M8.5** Verify in the running app against the test VMs.
+- [x] **M8.2** `systemInfo()` capability (Debian adapter, one round trip via marker
+      sections) + `/api/systeminfo` + client; **System info** revamped to a
+      fastfetch-style snapshot. Validated against the xfce VM. → FR-016 — `0.1.9`
+- [x] **M8.3** New **Command history** app showing the transparency log
+      (`/api/transparency`, polled); removed the command list from System info.
+      → FR-013, Art. 3 — `0.1.9`
+- [x] **M8.4** **Launcher** redesigned to a Windows-XP-style arrangement (header
+      with session identity, scrollable app list, session/places column, Disconnect
+      footer) — arrangement only, flat visual style kept. → FR-011 — `0.1.9`
+- [ ] **M8.5** Verify the new apps + launcher in the running app against the VMs.
 
 ## Next / post-v1
 

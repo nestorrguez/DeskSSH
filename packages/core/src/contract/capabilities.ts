@@ -11,6 +11,7 @@ import type {
   ProcessSignal,
   ServiceAction,
   ServiceState,
+  SystemInfo,
   SystemMetrics,
 } from './types.js';
 
@@ -44,6 +45,9 @@ export interface Capabilities {
 
   /** Snapshot CPU/memory/uptime. */
   systemMetrics(): Promise<CapabilityResult<SystemMetrics>>;
+
+  /** Fastfetch-style host facts for the System info app (FR-016). */
+  systemInfo(): Promise<CapabilityResult<SystemInfo>>;
 
   /** List running processes (System monitor, FR-051). */
   listProcesses(): Promise<CapabilityResult<readonly Process[]>>;
