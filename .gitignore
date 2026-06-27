@@ -45,3 +45,6 @@ Observaciones/
 
 # Estrategia privada (visión + roadmap futuro) — fuera del repo público a propósito
 private/
+
+# Máquinas virtuales de prueba (ISO, discos qcow2, preseeds) — pesado y local
+VM/
