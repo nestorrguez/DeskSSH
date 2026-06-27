@@ -62,10 +62,11 @@ export function withTransparency(
   host: string,
 ): CommandExecutor {
   return {
-    async exec(command: string): Promise<ExecResult> {
+    // `input` (e.g. a sudo password) is forwarded to the host but never logged.
+    async exec(command: string, input?: string): Promise<ExecResult> {
       const startedAt = Date.now();
       try {
-        const result = await executor.exec(command);
+        const result = await executor.exec(command, input);
         log.record({
           command,
           host,

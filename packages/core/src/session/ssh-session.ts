@@ -91,8 +91,10 @@ export class SshSession implements CommandExecutor {
     });
   }
 
-  /** Run a command, capturing stdout/stderr and the exit code (FR-030 building block). */
-  exec(command: string): Promise<ExecResult> {
+  /** Run a command, capturing stdout/stderr and the exit code (FR-030 building block).
+   *  `input`, when given, is written to stdin and stdin is closed (e.g. a password
+   *  for `sudo -S`); it is never part of the command string. */
+  exec(command: string, input?: string): Promise<ExecResult> {
     return new Promise<ExecResult>((resolve, reject) => {
       this.client.exec(command, (err, stream: ClientChannel) => {
         if (err) return reject(err);
@@ -110,6 +112,7 @@ export class SshSession implements CommandExecutor {
         stream.stderr.on('data', (chunk: Buffer) => {
           stderr += chunk.toString('utf8');
         });
+        if (input !== undefined) stream.end(input);
       });
     });
   }

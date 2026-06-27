@@ -8,6 +8,8 @@ type Responder = ExecResult | ((command: string) => ExecResult);
 
 export class FakeExecutor implements CommandExecutor {
   readonly commands: string[] = [];
+  /** stdin passed alongside each command (e.g. a sudo password), index-aligned. */
+  readonly inputs: Array<string | undefined> = [];
   private readonly rules: Array<{ match: (cmd: string) => boolean; respond: Responder }> = [];
   private fallback: Responder = { stdout: '', stderr: 'no rule matched', exitCode: 127 };
 
@@ -27,8 +29,9 @@ export class FakeExecutor implements CommandExecutor {
     return this;
   }
 
-  exec(command: string): Promise<ExecResult> {
+  exec(command: string, input?: string): Promise<ExecResult> {
     this.commands.push(command);
+    this.inputs.push(input);
     const rule = this.rules.find((r) => r.match(command));
     const responder = rule ? rule.respond : this.fallback;
     return Promise.resolve(typeof responder === 'function' ? responder(command) : responder);

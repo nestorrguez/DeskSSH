@@ -27,6 +27,14 @@ export type {
 } from './contract/types.js';
 export { ok, degraded, unsupported, runParsed, type CapabilityResult } from './contract/result.js';
 
+// Privilege elevation (Art. 4, FR-093..095)
+export {
+  withElevation,
+  detectPrivilege,
+  isPermissionDenied,
+  type PrivilegeInfo,
+} from './privilege/elevation.js';
+
 // Adapters (Art. 6)
 export { detectOs, parseOsRelease, familyFor, type OsFamily, type OsInfo } from './adapters/os.js';
 export { selectAdapter, createUnsupportedAdapter } from './adapters/registry.js';
