@@ -77,8 +77,8 @@ into commands executed on the host. No agents, no streaming, and with
 
 > **v1 app scope (focused cut):** Connection/hosts, Desktop shell, File manager,
 > **Editors** (Stallman = code, Documents = rich text), Terminal, **Image/PDF
-> viewers**, **System monitor** (now also process + service control) and a
-> **shared clipboard** (host ↔ client). This document specifies **only what ships**
+> viewers** and **System monitor** (now also process + service control). This
+> document specifies **only what ships**
 > or is committed-next; the remaining post-v1 apps (Log viewer, Packages, a full
 > dedicated Services app) and their FRs live in the private roadmap and graduate
 > back here when built.
@@ -111,7 +111,11 @@ into commands executed on the host. No agents, no streaming, and with
 - **FR-021** Create folder, rename, copy, move and delete (delete/overwrite require
   confirmation, Art. 4).
 - **FR-022** View properties (size, permissions, owner, dates).
-- **FR-023** Upload and download files between the user's machine and the host.
+- **FR-023** Transfer files between the user's local machine ("the client") and the
+  host: **Download to my computer** (`readFile` → browser download) and **Upload
+  from my computer** (pick a local file → `writeFile` into the current directory).
+  These honest, web-accurate labels replace the deferred "shared clipboard" framing
+  (§9.9).
 - **FR-024** Drag & drop in the file manager — **post-v1** (not in the focused v1
   cut).
 - **FR-025** When opening a file, the user chooses between two **execution
@@ -133,10 +137,18 @@ into commands executed on the host. No agents, no streaming, and with
 
 - **FR-026** Provide DeskSSH's **own context menu** (right-click) on entries — not
   the browser's — with the relevant actions (open, open with, open in terminal,
-  download, rename, cut, copy, delete) and a folder-level menu (new folder/file,
-  paste, open in terminal, refresh).
+  **download to my computer**, rename, cut, copy, delete) and a folder-level menu
+  (new folder/file, paste, **upload from my computer**, open in terminal, refresh).
 - **FR-027** **Open a directory in the Terminal**: launch (or re-target) the
   Terminal app already positioned in the selected folder, without manual `cd`.
+- **FR-028** **Name-conflict resolution.** When an operation would land on an
+  existing name (upload, paste, new file/folder, rename), don't silently overwrite:
+  prompt with **Replace**, **Keep both** (the new item is auto-renamed, e.g.
+  "name (2).ext") and **Cancel** (Art. 4).
+- **FR-029** **Permission-aware file operations.** Mutating/destructive file ops
+  (delete, rename, move/paste, create, upload) run with confirmation where
+  destructive (FR-090); if one is denied for lack of privilege, the elevation flow
+  (FR-093..095) is offered so it can be retried with the right credentials.
 
 ### App: Terminal
 
@@ -186,27 +198,16 @@ The GUI is synthesised on the client (Art. 10): viewers read the file bytes via
   with a fit / actual-size toggle.
 - **FR-101** **PDF viewer:** display PDF files with page navigation and zoom.
 
-### Shared clipboard (host ↔ client)
+### Shared clipboard (host ↔ client) — **deferred**
 
-A clipboard that moves **both text and files** between the remote host and the
-user's local machine ("the client"), to ease ad-hoc transfer better than a shared
-folder. Four actions — two copy, two paste:
-
-- **FR-110** **Copy / Paste (DeskSSH clipboard):** copy/paste **within DeskSSH**, a
-  session-scoped clipboard held on the server. For files this is the file manager's
-  cut/copy/paste (FR-021); for text, the copied text is held for pasting elsewhere
-  inside DeskSSH.
-- **FR-111** **Copy to my computer:** put the item in the **client's** clipboard —
-  **text** via the browser clipboard (`navigator.clipboard`), **files** by
-  downloading them to the client (FR-023).
-- **FR-112** **Paste from my computer:** take from the **client** — **text** from
-  the browser clipboard, **files** by uploading the chosen file to the host (FR-023).
-
-> Resolved (2026-06-27): the clipboard carries **both** text and files. Browser
-> reality: clipboard access is text-oriented and may require a user gesture/
-> permission; a web app cannot read/write arbitrary files on the OS clipboard, so
-> file transfer to/from the client is realised as **download/upload**, not a true
-> OS file-clipboard. See §9.9.
+> **Deferred to a later version (2026-06-27, §9.9).** Bridging the host with the
+> client's **OS clipboard** from a browser is awkward (a web app can't touch the OS
+> file clipboard, and text clipboard access is gesture/permission-bound). Instead,
+> v1 keeps the file manager's internal cut/copy/paste (FR-021) and the honest
+> client transfers — **Download to my computer / Upload from my computer** (FR-023)
+> — which already cover moving information in and out, more robustly than a shared
+> folder. The full host↔client clipboard (incl. text) is parked in the private
+> roadmap. ~~FR-110..112~~.
 
 ### Cross-cutting
 
@@ -288,9 +289,11 @@ written to the transparency log (Art. 4 / FR-005).
 8. ~~FR-025 "Open on the client"~~ → **Resolved (2026-06-27): plain download** in
    v1 (save to the user's machine via the browser). Type-aware inline opening on
    the client may be revisited post-v1.
-9. ~~Shared clipboard scope~~ → **Resolved (2026-06-27): both text and files**
-   (FR-110..112). Text uses the browser clipboard; files use download/upload since
-   a web app cannot touch the OS file clipboard.
+9. ~~Shared clipboard scope~~ → **Deferred (2026-06-27)** to a later version
+   (~~FR-110..112~~, moved to the private roadmap). A browser can't bridge the OS
+   file clipboard; v1 instead robustifies the file manager with honest **Download
+   to / Upload from my computer** (FR-023) plus name-conflict resolution (FR-028)
+   and permission-aware ops (FR-029).
 10. ~~Process "restart"~~ → **Resolved (2026-06-27): include service control**
     (FR-053): generic processes get signals (stop/reload, FR-052); true restart is
     done via the service manager (systemctl). Process list lives in the System

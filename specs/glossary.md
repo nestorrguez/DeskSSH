@@ -20,22 +20,22 @@ metaphor** and **system commands**— so a shared language avoids confusion.
 
 ## Metaphor ↔ command map (illustrative, not exhaustive)
 
-| Desktop action                | Equivalent command(s) (indicative)                    |
-| ----------------------------- | ----------------------------------------------------- |
-| Open folder                   | `ls`, `stat -c` / SFTP `readdir`                      |
-| File properties               | `stat`, `file`, `getfacl`                             |
-| Copy / move / rename / delete | `cp -a -n` / `mv -n` / `rm -rf` (with confirmation)   |
-| Create folder / file          | `mkdir -p` / `touch`                                  |
-| Download ("open on client")   | `readFile` (base64) → browser download                |
-| Open terminal                 | PTY channel over SSH                                  |
-| Open in terminal (cwd)        | PTY channel + `cd <dir>` as first input               |
-| Code editor (Stallman)        | read via `readFile`, save via `writeFile`; Monaco GUI |
-| Document editor (Documents)   | read/save via `readFile`/`writeFile`; stored as HTML  |
-| Image / PDF viewer            | `readFile` (base64) → rendered in the browser         |
-| Clipboard to / from my PC     | text: `navigator.clipboard`; files: download / upload |
-| List processes (Monitor)      | `ps -eo pid,user,%cpu,%mem,comm,args`                 |
-| Stop / reload a process       | `kill -SIGTERM` / `-SIGKILL` / `-SIGHUP`              |
-| System monitor                | `free`, `df`, `uptime`, `cat /proc/...`               |
-| Restart a service             | `systemctl start/stop/restart`, `systemctl show`      |
-| Log viewer                    | `journalctl`, `tail -f` over a channel                |
-| Network connections           | `ss -tulpn`, `ip a`                                   |
+| Desktop action                | Equivalent command(s) (indicative)                      |
+| ----------------------------- | ------------------------------------------------------- |
+| Open folder                   | `ls`, `stat -c` / SFTP `readdir`                        |
+| File properties               | `stat`, `file`, `getfacl`                               |
+| Copy / move / rename / delete | `cp -a -n` / `mv -n` / `rm -rf` (with confirmation)     |
+| Create folder / file          | `mkdir -p` / `touch`                                    |
+| Download ("open on client")   | `readFile` (base64) → browser download                  |
+| Open terminal                 | PTY channel over SSH                                    |
+| Open in terminal (cwd)        | PTY channel + `cd <dir>` as first input                 |
+| Code editor (Stallman)        | read via `readFile`, save via `writeFile`; Monaco GUI   |
+| Document editor (Documents)   | read/save via `readFile`/`writeFile`; stored as HTML    |
+| Image / PDF viewer            | `readFile` (base64) → rendered in the browser           |
+| Download / Upload (my PC)     | `readFile` → browser download · pick file → `writeFile` |
+| List processes (Monitor)      | `ps -eo pid,user,%cpu,%mem,comm,args`                   |
+| Stop / reload a process       | `kill -SIGTERM` / `-SIGKILL` / `-SIGHUP`                |
+| System monitor                | `free`, `df`, `uptime`, `cat /proc/...`                 |
+| Restart a service             | `systemctl start/stop/restart`, `systemctl show`        |
+| Log viewer                    | `journalctl`, `tail -f` over a channel                  |
+| Network connections           | `ss -tulpn`, `ip a`                                     |

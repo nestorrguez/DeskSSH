@@ -151,22 +151,20 @@ separate Processes app) and adds a host↔client clipboard for text + files.
 
 - [x] **M5.4** Endpoints `/api/processes`, `/api/signal`, `/api/service` (validated
       input, session-scoped) + tests. → FR-051/052/053
-- [ ] **M5.5** Session-scoped **text clipboard** buffer in the gateway for the
-      DeskSSH-clipboard text path. → FR-110
 
 ### Web (UI)
 
 - [x] **M5.6** **System monitor**: process table (PID/user/%CPU/%MEM/command, filter + CPU sort, periodic refresh) with Stop (SIGTERM) / Reload (SIGHUP) / Force stop
       (SIGKILL) and a service control row (start/stop/restart) — all confirmed. →
       FR-051/052/053/090
-- [ ] **M5.7** **Shared clipboard**: two Copy (Copy / Copy to my computer) and two
-      Paste (Paste / Paste from my computer). Text via `navigator.clipboard`; files
-      via download/upload (FR-023). Surfaced in the file manager + text selections. →
-      FR-110/111/112
+
+> ~~M5.5/M5.7 shared clipboard~~ → **deferred** (2026-06-27). The host↔client
+> clipboard moved to the private roadmap; the file-manager robustness work that
+> replaces it for v1 is **M7**. M5's shipped scope (process/service control) is done.
 
 Core/gateway/monitor validated against a real Debian 13 host (test VMs): listProcesses
 (127 procs), signalProcess kills a spawned process, and as root serviceAction restarts
-ssh → active/running. Remaining: clipboard (M5.5/M5.7).
+ssh → active/running.
 
 ## M6 — Privilege elevation (sudo) — DONE (`0.1.7`)
 
@@ -206,9 +204,28 @@ admin credentials in Modal 2, an unprivileged-but-sudo user via Modal 1, and a u
 on a host without escalation sees the "Understood" notice — no password ever logged
 or persisted. Validate against the test VMs.
 
+## M7 — File manager robustness — TODO
+
+From 2026-06-27 feedback (replaces the deferred shared clipboard). Specced first
+(spec §6 FR-023/028/029, `plan.md §4`). No new web/server architecture — uses the
+existing capabilities + the M6 elevation runner.
+
+- [ ] **M7.1** Rename the client-transfer labels: **Download to my computer**
+      (existing download) and add **Upload from my computer** — a hidden
+      `<input type=file>` → base64 → `writeFile` into the current directory. → FR-023
+- [ ] **M7.2** **Name-conflict modal** (Replace / Keep both / Cancel) before upload,
+      paste, new file/folder and rename land on an existing name. _Keep both_ adds a
+      ` (n)` suffix; _Replace_ removes-then-writes. → FR-028, Art. 4
+- [ ] **M7.3** Route the file manager's mutating ops (delete, rename, move/paste,
+      create, upload) through the `useElevation` runner so a permission-denied op
+      offers the elevation modals. Delete keeps its confirmation. → FR-029/090/093..095
+- [ ] **M7.4** Validate against the test VMs (incl. an op on a root-owned path that
+      triggers elevation, and a name collision that triggers the conflict modal).
+
 ## Next / post-v1
 
-The near-term technical backlog (handler-registry unification, FR-071 close-guard,
-standalone file upload) and the post-v1 roadmap (Log viewer, Packages, a full
-dedicated Services app, host tiers, credential store, hosted deployment) are tracked
-in the **private roadmap**, not here. This file lists only shipped/in-progress work.
+The near-term technical backlog (handler-registry unification, FR-071 close-guard)
+and the post-v1 roadmap (**shared clipboard host↔client**, Log viewer, Packages, a
+full dedicated Services app, host tiers, credential store, hosted deployment) are
+tracked in the **private roadmap**, not here. This file lists only shipped/in-progress
+work.

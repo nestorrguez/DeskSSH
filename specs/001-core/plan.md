@@ -196,25 +196,22 @@ popularity rather than difficulty, is tracked in the **private roadmap**.
   §9.8). It cannot force the OS's default app; type-aware inline opening on the
   client may be revisited post-v1.
 
-### Shared clipboard: host ↔ client (FR-110..112)
+### File transfer & robustness (FR-023/028/029)
 
-Two clipboards, bridged, for both text and files — easing ad-hoc transfer beyond a
-shared folder:
+The "shared clipboard" is **deferred** (spec §9.9). Instead the file manager is made
+robust with web-honest pieces:
 
-- **DeskSSH clipboard (server-side, session-scoped):** _Copy_/_Paste_ within
-  DeskSSH. For files it is the file manager's cut/copy/paste over the move/copy
-  capabilities (FR-021); for text it is a small per-session buffer in the gateway.
-- **Client clipboard (the browser):** _Copy to my computer_ / _Paste from my
-  computer_.
-  - **Text** uses the Web **Clipboard API** (`navigator.clipboard.writeText` /
-    `readText`). It needs a user gesture and may prompt for permission; over plain
-    HTTP it is restricted to secure contexts (localhost counts as secure), so the
-    self-hosted/LAN case works, a non-TLS remote host may not.
-  - **Files** cannot be placed on / read from the OS clipboard by a web app, so
-    "to/from my computer" is realised as **download / upload** (FR-023): copy-to =
-    download the bytes; paste-from = upload a picked file (`writeFile`).
-- The four actions surface in the file manager (and where text selection exists),
-  presented as two _Copy_ and two _Paste_ entries.
+- **Client transfer (FR-023):** _Download to my computer_ = `readFile` → a browser
+  download; _Upload from my computer_ = a hidden `<input type=file>` → bytes →
+  base64 → `writeFile` into the current directory. (No OS-clipboard tricks.)
+- **Name-conflict resolution (FR-028):** before an op lands on an existing name
+  (upload, paste, new file/folder, rename), the client checks the current listing
+  and, on collision, asks **Replace / Keep both / Cancel**. _Keep both_ auto-renames
+  with a ` (n)` suffix before the extension; _Replace_ removes-then-writes (since the
+  adapter's `mv -n`/`cp -a -n` refuse to clobber by design).
+- **Permission-aware ops (FR-029):** mutating file ops flow through the same
+  `useElevation` runner as the monitor — a permission-denied delete/rename/move/
+  create/upload offers the elevation modals (FR-093..095) to retry with privilege.
 
 ### Parsers and resilience
 
