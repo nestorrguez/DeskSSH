@@ -23,7 +23,7 @@ export interface FileEntry {
   readonly mtime: number;
 }
 
-/** A running process (post-v1 capability; typed here for completeness). */
+/** A running process (System monitor, FR-051). */
 export interface Process {
   readonly pid: number;
   readonly user: string;
@@ -34,7 +34,13 @@ export interface Process {
   readonly command: string;
 }
 
-/** A managed service and its state (post-v1 capability). */
+/** Signals DeskSSH can send to a process (FR-052): stop (TERM/KILL), reload (HUP). */
+export type ProcessSignal = 'TERM' | 'KILL' | 'HUP';
+
+/** Service lifecycle actions DeskSSH can request (FR-053). */
+export type ServiceAction = 'start' | 'stop' | 'restart';
+
+/** A managed service and its state (FR-053). */
 export interface ServiceState {
   readonly name: string;
   readonly active: boolean;

@@ -20,6 +20,8 @@ export type {
   FileEntry,
   FileType,
   Process,
+  ProcessSignal,
+  ServiceAction,
   ServiceState,
   SystemMetrics,
 } from './contract/types.js';

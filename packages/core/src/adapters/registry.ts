@@ -24,6 +24,8 @@ export function createUnsupportedAdapter(reason: string): Capabilities {
     remove: fail,
     systemMetrics: fail,
     listProcesses: fail,
+    signalProcess: fail,
+    serviceAction: fail,
     listServices: fail,
   };
 }

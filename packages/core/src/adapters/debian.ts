@@ -10,7 +10,15 @@ import type { CommandExecutor } from '../exec/types.js';
 import type { Capabilities } from '../contract/capabilities.js';
 import type { CapabilityResult } from '../contract/result.js';
 import { ok, runParsed, unsupported } from '../contract/result.js';
-import type { FileEntry, FileType, SystemMetrics } from '../contract/types.js';
+import type {
+  FileEntry,
+  FileType,
+  Process,
+  ProcessSignal,
+  ServiceAction,
+  ServiceState,
+  SystemMetrics,
+} from '../contract/types.js';
 import { quote } from './shell.js';
 
 const FIND_PRINTF = String.raw`%y\t%s\t%m\t%u\t%g\t%T@\t%f\n`;
@@ -141,6 +149,49 @@ const METRICS_COMMAND =
   'echo ===LOAD===; cat /proc/loadavg; ' +
   'echo ===MEM===; cat /proc/meminfo';
 
+// `ps -eo pid=,user=,pcpu=,pmem=,args=` → "PID USER %CPU %MEM full command line".
+// The `=` headers suppress the column titles; args (the rest of the line) may
+// contain spaces, so it is captured greedily as the final field.
+const PS_COMMAND = 'ps -eo pid=,user=,pcpu=,pmem=,args=';
+
+/** Parse one `ps` line into a Process (used by {@link parseProcesses}). */
+export function parseProcessLine(line: string): Process {
+  const m = /^\s*(\d+)\s+(\S+)\s+([\d.]+)\s+([\d.]+)\s+(.*)$/.exec(line);
+  if (!m) throw new Error(`Unexpected ps output: ${line}`);
+  return {
+    pid: Number.parseInt(m[1] ?? '', 10) || 0,
+    user: m[2] ?? '',
+    cpu: Number.parseFloat(m[3] ?? '0') || 0,
+    mem: Number.parseFloat(m[4] ?? '0') || 0,
+    command: m[5] ?? '',
+  };
+}
+
+/** Parse full `ps` output into a Process list (skips blank lines). */
+export function parseProcesses(stdout: string): Process[] {
+  return stdout
+    .split('\n')
+    .filter((line) => line.trim().length > 0)
+    .map(parseProcessLine);
+}
+
+/** Parse `systemctl show <name> -p ActiveState,UnitFileState,SubState` output. */
+export function parseServiceState(name: string, stdout: string): ServiceState {
+  const kv = new Map<string, string>();
+  for (const line of stdout.split('\n')) {
+    const eq = line.indexOf('=');
+    if (eq > 0) kv.set(line.slice(0, eq), line.slice(eq + 1).trim());
+  }
+  const active = kv.get('ActiveState');
+  if (active === undefined) throw new Error('Incomplete systemctl show output');
+  return {
+    name,
+    active: active === 'active',
+    enabled: kv.get('UnitFileState') === 'enabled',
+    status: kv.get('SubState') || active,
+  };
+}
+
 export class DebianAdapter implements Capabilities {
   constructor(private readonly exec: CommandExecutor) {}
 
@@ -202,8 +253,29 @@ export class DebianAdapter implements Capabilities {
     return runParsed(this.exec, METRICS_COMMAND, parseSystemMetrics);
   }
 
-  listProcesses(): Promise<CapabilityResult<never>> {
-    return Promise.resolve(unsupported('listProcesses is a post-v1 capability'));
+  listProcesses(): Promise<CapabilityResult<readonly Process[]>> {
+    return runParsed(this.exec, PS_COMMAND, parseProcesses);
+  }
+
+  signalProcess(pid: number, signal: ProcessSignal): Promise<CapabilityResult<void>> {
+    return this.runVoid(`kill -s ${signal} ${Math.trunc(pid)}`);
+  }
+
+  async serviceAction(
+    name: string,
+    action: ServiceAction,
+  ): Promise<CapabilityResult<ServiceState>> {
+    const act = await this.exec.exec(`systemctl ${action} ${quote(name)}`);
+    if (act.exitCode !== 0) {
+      return {
+        kind: 'failed',
+        raw: act.stderr || act.stdout,
+        exitCode: act.exitCode,
+        reason: act.stderr.trim() || `service ${action} failed`,
+      };
+    }
+    const show = `systemctl show ${quote(name)} --property=ActiveState,UnitFileState,SubState`;
+    return runParsed(this.exec, show, (out) => parseServiceState(name, out));
   }
 
   listServices(): Promise<CapabilityResult<never>> {

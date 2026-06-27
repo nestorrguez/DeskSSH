@@ -25,6 +25,7 @@ import {
   selectAdapter,
   type Capabilities,
   type CapabilityResult,
+  type CommandExecutor,
   type ConnectOptions,
   type SshAuth,
 } from '@deskssh/core';
@@ -117,6 +118,54 @@ async function mutationSweep(adapter: Capabilities, home: string): Promise<void>
   }
 }
 
+async function processServiceSweep(
+  adapter: Capabilities,
+  executor: CommandExecutor,
+  asRoot: boolean,
+): Promise<void> {
+  console.log('\nProcesses & services (System monitor)');
+
+  const procs = await adapter.listProcesses();
+  check(
+    'listProcesses returns running processes',
+    procs.kind === 'ok' && procs.value.length > 0,
+    procs.kind === 'ok' ? `${procs.value.length} processes` : why(procs),
+  );
+
+  // Spawn a throwaway process, signal it, confirm it is gone.
+  const spawn = await executor.exec('nohup sleep 300 >/dev/null 2>&1 & echo $!');
+  const pid = Number.parseInt(spawn.stdout.trim(), 10);
+  const sig = await adapter.signalProcess(pid, 'TERM');
+  await new Promise((r) => setTimeout(r, 400));
+  const stillAlive = (
+    await executor.exec(`kill -0 ${pid} 2>/dev/null && echo ALIVE || echo GONE`)
+  ).stdout
+    .trim()
+    .endsWith('ALIVE');
+  check(
+    'signalProcess (SIGTERM) stops a spawned process',
+    sig.kind === 'ok' && !stillAlive,
+    `pid ${pid}`,
+  );
+
+  // serviceAction: restart ssh (safe — sshd keeps existing connections). Success
+  // needs privilege; as a normal user a clean graceful failure is the right outcome.
+  const svc = await adapter.serviceAction('ssh', 'restart');
+  if (asRoot) {
+    check(
+      'serviceAction restart ssh → active/running',
+      svc.kind === 'ok' && svc.value.active,
+      svc.kind === 'ok' ? svc.value.status : why(svc),
+    );
+  } else {
+    check(
+      'serviceAction returns a typed result (ok or graceful failure, never a crash)',
+      svc.kind === 'ok' || svc.kind === 'failed',
+      why(svc),
+    );
+  }
+}
+
 async function ptySmoke(session: SshSession): Promise<void> {
   console.log('\nInteractive PTY (Terminal app path)');
   const marker = `DESKSSH_PTY_OK_${Date.now()}`;
@@ -199,6 +248,7 @@ async function main(): Promise<void> {
     }
 
     await mutationSweep(adapter, base);
+    await processServiceSweep(adapter, executor, options.username === 'root');
     await ptySmoke(session);
   } finally {
     session.close();

@@ -5,7 +5,14 @@
 // degraded/unsupported uniformly (Art. 6/7).
 
 import type { CapabilityResult } from './result.js';
-import type { FileEntry, Process, ServiceState, SystemMetrics } from './types.js';
+import type {
+  FileEntry,
+  Process,
+  ProcessSignal,
+  ServiceAction,
+  ServiceState,
+  SystemMetrics,
+} from './types.js';
 
 export interface Capabilities {
   /** List a directory's entries. */
@@ -38,9 +45,15 @@ export interface Capabilities {
   /** Snapshot CPU/memory/uptime. */
   systemMetrics(): Promise<CapabilityResult<SystemMetrics>>;
 
-  /** List processes (post-v1). */
+  /** List running processes (System monitor, FR-051). */
   listProcesses(): Promise<CapabilityResult<readonly Process[]>>;
 
-  /** List services (post-v1). */
+  /** Send a signal to a process: stop (TERM/KILL) or reload (HUP) (FR-052). */
+  signalProcess(pid: number, signal: ProcessSignal): Promise<CapabilityResult<void>>;
+
+  /** Start, stop or restart a service; returns its resulting state (FR-053). */
+  serviceAction(name: string, action: ServiceAction): Promise<CapabilityResult<ServiceState>>;
+
+  /** List services (post-v1, full dedicated Services app). */
   listServices(): Promise<CapabilityResult<readonly ServiceState[]>>;
 }

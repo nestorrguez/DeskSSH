@@ -5,6 +5,8 @@ import {
   parseListDir,
   parseStat,
   parseSystemMetrics,
+  parseProcessLine,
+  parseServiceState,
 } from './debian.js';
 import { FakeExecutor, okResult } from '../test/fake-executor.js';
 
@@ -140,9 +142,98 @@ describe('DebianAdapter capabilities', () => {
     expect(exec.commands[0]).toBe("rm -rf '/etc/passwd'");
   });
 
-  it('marks post-v1 capabilities as unsupported', async () => {
+  it('listProcesses parses ps output into typed processes', async () => {
+    const exec = new FakeExecutor().on(
+      'ps -eo',
+      okResult(
+        '    1 root  0.1  0.4 /sbin/init\n  920 deskssh 12.5  3.2 node /srv/app.js --port 80\n',
+      ),
+    );
+    const adapter = new DebianAdapter(exec);
+    const result = await adapter.listProcesses();
+    expect(result.kind).toBe('ok');
+    if (result.kind === 'ok') {
+      expect(result.value).toHaveLength(2);
+      expect(result.value[0]).toEqual({
+        pid: 1,
+        user: 'root',
+        cpu: 0.1,
+        mem: 0.4,
+        command: '/sbin/init',
+      });
+      expect(result.value[1]?.command).toBe('node /srv/app.js --port 80');
+    }
+  });
+
+  it('signalProcess sends the named signal to the pid', async () => {
+    const exec = new FakeExecutor().on('kill', okResult(''));
+    const adapter = new DebianAdapter(exec);
+    expect((await adapter.signalProcess(920, 'TERM')).kind).toBe('ok');
+    expect((await adapter.signalProcess(5.9 as number, 'HUP')).kind).toBe('ok');
+    expect(exec.commands[0]).toBe('kill -s TERM 920');
+    expect(exec.commands[1]).toBe('kill -s HUP 5'); // pid is truncated to an integer
+  });
+
+  it('serviceAction runs systemctl then reports the resulting state', async () => {
+    const exec = new FakeExecutor()
+      .on('systemctl restart', okResult(''))
+      .on(
+        'systemctl show',
+        okResult('ActiveState=active\nUnitFileState=enabled\nSubState=running\n'),
+      );
+    const adapter = new DebianAdapter(exec);
+    const result = await adapter.serviceAction('nginx', 'restart');
+    expect(result.kind).toBe('ok');
+    if (result.kind === 'ok') {
+      expect(result.value).toEqual({
+        name: 'nginx',
+        active: true,
+        enabled: true,
+        status: 'running',
+      });
+    }
+    expect(exec.commands[0]).toBe("systemctl restart 'nginx'");
+  });
+
+  it('serviceAction surfaces a failed action without querying state', async () => {
+    const exec = new FakeExecutor().on('systemctl start', {
+      stdout: '',
+      stderr: 'Failed to start unit: access denied',
+      exitCode: 1,
+    });
+    const adapter = new DebianAdapter(exec);
+    const result = await adapter.serviceAction('nginx', 'start');
+    expect(result.kind).toBe('failed');
+    expect(exec.commands).toHaveLength(1); // no systemctl show after a failed action
+  });
+
+  it('listServices remains unsupported (full Services app is post-v1)', async () => {
     const adapter = new DebianAdapter(new FakeExecutor());
-    expect((await adapter.listProcesses()).kind).toBe('unsupported');
     expect((await adapter.listServices()).kind).toBe('unsupported');
+  });
+});
+
+describe('parseProcessLine / parseServiceState', () => {
+  it('parses a ps line with a multi-word command', () => {
+    const p = parseProcessLine('  920 deskssh 12.5  3.2 node app.js --port 80');
+    expect(p).toEqual({
+      pid: 920,
+      user: 'deskssh',
+      cpu: 12.5,
+      mem: 3.2,
+      command: 'node app.js --port 80',
+    });
+  });
+
+  it('throws on a malformed ps line (caught upstream as degraded)', () => {
+    expect(() => parseProcessLine('not a process')).toThrow();
+  });
+
+  it('parses systemctl show key=value output', () => {
+    const s = parseServiceState(
+      'ssh',
+      'ActiveState=active\nUnitFileState=enabled\nSubState=running',
+    );
+    expect(s).toEqual({ name: 'ssh', active: true, enabled: true, status: 'running' });
   });
 });
