@@ -159,14 +159,43 @@ export class DebianAdapter implements Capabilities {
     );
   }
 
-  async writeFile(path: string, contents: Uint8Array): Promise<CapabilityResult<void>> {
+  writeFile(path: string, contents: Uint8Array): Promise<CapabilityResult<void>> {
     const b64 = Buffer.from(contents).toString('base64');
-    const cmd = `printf %s ${quote(b64)} | base64 -d > ${quote(path)}`;
-    const { stderr, exitCode } = await this.exec.exec(cmd);
+    return this.runVoid(`printf %s ${quote(b64)} | base64 -d > ${quote(path)}`);
+  }
+
+  makeDir(path: string): Promise<CapabilityResult<void>> {
+    return this.runVoid(`mkdir -p ${quote(path)}`);
+  }
+
+  createFile(path: string): Promise<CapabilityResult<void>> {
+    return this.runVoid(`touch ${quote(path)}`);
+  }
+
+  move(from: string, to: string): Promise<CapabilityResult<void>> {
+    return this.runVoid(`mv -n ${quote(from)} ${quote(to)}`);
+  }
+
+  copy(from: string, to: string): Promise<CapabilityResult<void>> {
+    return this.runVoid(`cp -a -n ${quote(from)} ${quote(to)}`);
+  }
+
+  remove(path: string): Promise<CapabilityResult<void>> {
+    return this.runVoid(`rm -rf ${quote(path)}`);
+  }
+
+  /** Run a command whose only outcome is success/failure (no parsed value). */
+  private async runVoid(command: string): Promise<CapabilityResult<void>> {
+    const { stdout, stderr, exitCode } = await this.exec.exec(command);
     if (exitCode !== 0) {
-      return { kind: 'failed', raw: stderr, exitCode, reason: stderr.trim() || 'write failed' };
+      return {
+        kind: 'failed',
+        raw: stderr || stdout,
+        exitCode,
+        reason: stderr.trim() || 'command failed',
+      };
     }
-    return ok(undefined, '');
+    return ok(undefined, stdout);
   }
 
   systemMetrics(): Promise<CapabilityResult<SystemMetrics>> {

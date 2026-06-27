@@ -109,6 +109,37 @@ describe('DebianAdapter capabilities', () => {
     expect(exec.commands[0]).toContain("> '/tmp/f'");
   });
 
+  it('makeDir creates parents, createFile touches', async () => {
+    const exec = new FakeExecutor().on('mkdir', okResult('')).on('touch', okResult(''));
+    const adapter = new DebianAdapter(exec);
+    expect((await adapter.makeDir('/tmp/a/b')).kind).toBe('ok');
+    expect((await adapter.createFile('/tmp/a/f')).kind).toBe('ok');
+    expect(exec.commands[0]).toBe("mkdir -p '/tmp/a/b'");
+    expect(exec.commands[1]).toBe("touch '/tmp/a/f'");
+  });
+
+  it('move and copy refuse to overwrite (-n)', async () => {
+    const exec = new FakeExecutor().on('mv', okResult('')).on('cp', okResult(''));
+    const adapter = new DebianAdapter(exec);
+    expect((await adapter.move('/a', '/b')).kind).toBe('ok');
+    expect((await adapter.copy('/a', '/b')).kind).toBe('ok');
+    expect(exec.commands[0]).toBe("mv -n '/a' '/b'");
+    expect(exec.commands[1]).toBe("cp -a -n '/a' '/b'");
+  });
+
+  it('remove deletes recursively, surfacing failures', async () => {
+    const exec = new FakeExecutor().on('rm', {
+      stdout: '',
+      stderr: 'Permission denied',
+      exitCode: 1,
+    });
+    const adapter = new DebianAdapter(exec);
+    const result = await adapter.remove('/etc/passwd');
+    expect(result.kind).toBe('failed');
+    if (result.kind === 'failed') expect(result.reason).toBe('Permission denied');
+    expect(exec.commands[0]).toBe("rm -rf '/etc/passwd'");
+  });
+
   it('marks post-v1 capabilities as unsupported', async () => {
     const adapter = new DebianAdapter(new FakeExecutor());
     expect((await adapter.listProcesses()).kind).toBe('unsupported');

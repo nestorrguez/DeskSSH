@@ -20,6 +20,21 @@ export interface Capabilities {
   /** Write bytes to a file (overwrites). */
   writeFile(path: string, contents: Uint8Array): Promise<CapabilityResult<void>>;
 
+  /** Create a directory, including any missing parents. */
+  makeDir(path: string): Promise<CapabilityResult<void>>;
+
+  /** Create an empty file if it does not exist (touch semantics). */
+  createFile(path: string): Promise<CapabilityResult<void>>;
+
+  /** Move or rename a path (refuses to overwrite an existing destination). */
+  move(from: string, to: string): Promise<CapabilityResult<void>>;
+
+  /** Copy a file or directory recursively (refuses to overwrite). */
+  copy(from: string, to: string): Promise<CapabilityResult<void>>;
+
+  /** Remove a file or directory recursively. */
+  remove(path: string): Promise<CapabilityResult<void>>;
+
   /** Snapshot CPU/memory/uptime. */
   systemMetrics(): Promise<CapabilityResult<SystemMetrics>>;
 
