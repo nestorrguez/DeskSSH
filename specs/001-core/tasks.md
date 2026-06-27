@@ -210,17 +210,18 @@ From 2026-06-27 feedback (replaces the deferred shared clipboard). Specced first
 (spec §6 FR-023/028/029, `plan.md §4`). No new web/server architecture — uses the
 existing capabilities + the M6 elevation runner.
 
-- [ ] **M7.1** Rename the client-transfer labels: **Download to my computer**
-      (existing download) and add **Upload from my computer** — a hidden
-      `<input type=file>` → base64 → `writeFile` into the current directory. → FR-023
-- [ ] **M7.2** **Name-conflict modal** (Replace / Keep both / Cancel) before upload,
+- [x] **M7.1** Client-transfer labels: **Download to my computer** + new **Upload
+      from my computer** — hidden `<input type=file>` → base64 → `writeFile` into the
+      current directory (toolbar + folder menu). → FR-023 — `0.1.8`
+- [x] **M7.2** **Name-conflict modal** (Replace / Keep both / Cancel) before upload,
       paste, new file/folder and rename land on an existing name. _Keep both_ adds a
-      ` (n)` suffix; _Replace_ removes-then-writes. → FR-028, Art. 4
-- [ ] **M7.3** Route the file manager's mutating ops (delete, rename, move/paste,
-      create, upload) through the `useElevation` runner so a permission-denied op
-      offers the elevation modals. Delete keeps its confirmation. → FR-029/090/093..095
-- [ ] **M7.4** Validate against the test VMs (incl. an op on a root-owned path that
-      triggers elevation, and a name collision that triggers the conflict modal).
+      ` (n)` suffix; _Replace_ removes-then-writes. → FR-028, Art. 4 — `0.1.8`
+- [x] **M7.3** File manager's mutating ops (delete, rename, move/paste, create,
+      upload) route through the `useElevation` runner; the file-op gateway endpoints
+      gained an optional `elevate` via a shared `runCap`. Delete keeps confirmation.
+      → FR-029/090/093..095 — `0.1.8`
+- [ ] **M7.4** Verify manually against the test VMs (a root-owned op → elevation;
+      a name collision → conflict modal; an upload round-trip).
 
 ## Next / post-v1
 
