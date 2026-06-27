@@ -79,6 +79,23 @@ export const en = {
   'monitor.confirmServiceBody': '{action} the service "{name}"?',
   'monitor.cancel': 'Cancel',
   'monitor.confirm': 'Confirm',
+  'elev.modal1Title': 'Administrator authentication',
+  'elev.modal1Body':
+    'This action needs administrator privileges. Enter your password to authorize it.',
+  'elev.password': 'Password',
+  'elev.username': 'Username',
+  'elev.authorize': 'Authorize',
+  'elev.cancel': 'Cancel',
+  'elev.failed': 'Authentication failed or action not permitted',
+  'elev.noPermTitle': 'Insufficient permissions',
+  'elev.noPermBody': 'Your account does not have permission to perform this action.',
+  'elev.noEscalation':
+    "Your account lacks permission and this host doesn't allow privilege escalation, so the action can't be completed.",
+  'elev.haveAdmin': 'I have administrator credentials',
+  'elev.understood': 'Understood',
+  'elev.modal2Title': 'Authenticate as another user',
+  'elev.modal2Body':
+    'Enter the username and password of a privileged account (or root) to run this action.',
   'files.up': 'Up',
   'files.empty': 'Empty directory',
   'files.error': 'Could not list directory',

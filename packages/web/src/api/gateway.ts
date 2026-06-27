@@ -7,12 +7,18 @@ import type {
   CapabilityResult,
   CommandRecord,
   FileEntry,
+  PrivilegeInfo,
   Process,
   ProcessSignal,
   ServiceAction,
   ServiceState,
   SystemMetrics,
 } from '@deskssh/core';
+
+/** A one-shot privilege elevation for a single action (FR-094/095). */
+export type Elevate =
+  | { kind: 'current'; password: string }
+  | { kind: 'user'; user: string; password: string };
 
 export type AuthInput =
   | { kind: 'password'; password: string }
@@ -129,14 +135,20 @@ export function signalProcess(
   sessionId: string,
   pid: number,
   signal: ProcessSignal,
+  elevate?: Elevate,
 ): Promise<VoidResult> {
-  return post('/api/signal', { sessionId, pid, signal });
+  return post('/api/signal', { sessionId, pid, signal, ...(elevate ? { elevate } : {}) });
 }
 
 export function serviceAction(
   sessionId: string,
   name: string,
   action: ServiceAction,
+  elevate?: Elevate,
 ): Promise<{ result: CapabilityResult<ServiceState> }> {
-  return post('/api/service', { sessionId, name, action });
+  return post('/api/service', { sessionId, name, action, ...(elevate ? { elevate } : {}) });
+}
+
+export function getPrivilege(sessionId: string): Promise<{ privilege: PrivilegeInfo }> {
+  return post('/api/privilege', { sessionId });
 }

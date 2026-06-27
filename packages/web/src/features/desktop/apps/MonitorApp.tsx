@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search, RotateCw } from 'lucide-react';
 import type { Process, ProcessSignal, ServiceAction, SystemMetrics } from '@deskssh/core';
-import { listProcesses, serviceAction, signalProcess, systemMetrics } from '@/api/gateway';
+import {
+  listProcesses,
+  serviceAction,
+  signalProcess,
+  systemMetrics,
+  type Elevate,
+} from '@/api/gateway';
+import { useElevation } from '../useElevation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -37,6 +44,7 @@ export function MonitorApp({ t, session }: AppContext) {
   const [pending, setPending] = useState<Pending | null>(null);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const { run: runElevated, dialogs: elevationDialogs } = useElevation(session.sessionId, t);
 
   useEffect(() => {
     let active = true;
@@ -81,13 +89,16 @@ export function MonitorApp({ t, session }: AppContext) {
   async function confirmPending(): Promise<void> {
     if (!pending) return;
     setActionMsg(null);
-    const run =
-      pending.kind === 'signal'
-        ? signalProcess(session.sessionId, pending.pid, pending.signal)
-        : serviceAction(session.sessionId, pending.name, pending.action);
+    const p = pending;
     setPending(null);
+    // The action is retryable with elevation: useElevation re-runs it elevated and
+    // resolves with the final result if the first attempt is denied for privilege.
+    const action = (e?: Elevate) =>
+      p.kind === 'signal'
+        ? signalProcess(session.sessionId, p.pid, p.signal, e)
+        : serviceAction(session.sessionId, p.name, p.action, e);
     try {
-      const { result } = await run;
+      const { result } = await runElevated(action);
       if (result.kind !== 'ok')
         setActionMsg('reason' in result ? result.reason : t('monitor.actionFailed'));
       else reload();
@@ -318,6 +329,9 @@ export function MonitorApp({ t, session }: AppContext) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Privilege-elevation modals (FR-094/095), driven by the action result. */}
+      {elevationDialogs}
     </div>
   );
 }

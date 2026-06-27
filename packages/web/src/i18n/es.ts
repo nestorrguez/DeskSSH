@@ -80,6 +80,23 @@ export const es: Record<MessageKey, string> = {
   'monitor.confirmServiceBody': '¿{action} el servicio "{name}"?',
   'monitor.cancel': 'Cancelar',
   'monitor.confirm': 'Confirmar',
+  'elev.modal1Title': 'Autenticación de administrador',
+  'elev.modal1Body':
+    'Esta acción necesita privilegios de administrador. Introduce tu contraseña para autorizarla.',
+  'elev.password': 'Contraseña',
+  'elev.username': 'Usuario',
+  'elev.authorize': 'Autorizar',
+  'elev.cancel': 'Cancelar',
+  'elev.failed': 'Autenticación fallida o acción no permitida',
+  'elev.noPermTitle': 'Permisos insuficientes',
+  'elev.noPermBody': 'Tu usuario no tiene permisos para realizar esta acción.',
+  'elev.noEscalation':
+    'Tu usuario no tiene permisos y este host no permite el escalado de privilegios, así que la acción no se puede completar.',
+  'elev.haveAdmin': 'Tengo credenciales de administrador',
+  'elev.understood': 'Entendido',
+  'elev.modal2Title': 'Autenticarse como otro usuario',
+  'elev.modal2Body':
+    'Introduce el usuario y la contraseña de una cuenta con privilegios (o root) para ejecutar esta acción.',
   'files.up': 'Subir',
   'files.empty': 'Directorio vacío',
   'files.error': 'No se pudo listar el directorio',
