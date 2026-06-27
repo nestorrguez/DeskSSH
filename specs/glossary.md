@@ -20,16 +20,20 @@ metaphor** and **system commands**— so a shared language avoids confusion.
 
 ## Metaphor ↔ command map (illustrative, not exhaustive)
 
-| Desktop action       | Equivalent command(s) (indicative)                    |
-| -------------------- | ----------------------------------------------------- |
-| Open folder          | `ls`, `stat -c` / SFTP `readdir`                      |
-| File properties      | `stat`, `file`, `getfacl`                             |
-| Copy / move / delete | `cp` / `mv` / `rm` (with confirmation)                |
-| Create folder        | `mkdir`                                               |
-| Open terminal        | PTY channel over SSH                                  |
-| Task manager         | `ps -eo`, `top -b -n1`, `kill`                        |
-| System monitor       | `free`, `df`, `uptime`, `cat /proc/...`               |
-| Service manager      | `systemctl list-units`, `systemctl start/stop/status` |
-| Log viewer           | `journalctl`, `tail -f` over a channel                |
-| Text editor          | read via SFTP/`cat`, save via SFTP                    |
-| Network connections  | `ss -tulpn`, `ip a`                                   |
+| Desktop action                | Equivalent command(s) (indicative)                    |
+| ----------------------------- | ----------------------------------------------------- |
+| Open folder                   | `ls`, `stat -c` / SFTP `readdir`                      |
+| File properties               | `stat`, `file`, `getfacl`                             |
+| Copy / move / rename / delete | `cp -a -n` / `mv -n` / `rm -rf` (with confirmation)   |
+| Create folder / file          | `mkdir -p` / `touch`                                  |
+| Download ("open on client")   | `readFile` (base64) → browser download                |
+| Open terminal                 | PTY channel over SSH                                  |
+| Open in terminal (cwd)        | PTY channel + `cd <dir>` as first input               |
+| Code editor (Stallman)        | read via `readFile`, save via `writeFile`; Monaco GUI |
+| Document editor (Documents)   | read/save via `readFile`/`writeFile`; stored as HTML  |
+| Image / PDF viewer            | `readFile` (base64) → rendered in the browser         |
+| Task manager                  | `ps -eo`, `top -b -n1`, `kill`                        |
+| System monitor                | `free`, `df`, `uptime`, `cat /proc/...`               |
+| Service manager               | `systemctl list-units`, `systemctl start/stop/status` |
+| Log viewer                    | `journalctl`, `tail -f` over a channel                |
+| Network connections           | `ss -tulpn`, `ip a`                                   |

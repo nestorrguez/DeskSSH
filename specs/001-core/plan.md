@@ -79,6 +79,18 @@ details (styling framework, icon set) still open — see §8. Alternatives noted
     attribution), chosen for its clean, uniform stroke style fitting the
     accessibility-first UI. (Considered: Tabler/Phosphor/Heroicons MIT, Material
     Symbols Apache-2.0, Font Awesome Free CC BY; FA Pro proprietary — avoided.)
+  - _Code editor (FR-072):_ **Monaco** (`monaco-editor` + `@monaco-editor/react`,
+    **MIT**), the VS Code editor, with the locally bundled engine (offline /
+    self-hosted) and its workers wired via Vite `?worker` imports. Lazy-loaded into
+    its own async chunk so it stays out of the main bundle; the web build raises
+    Node's heap because Monaco is large to bundle.
+  - _Document editor (FR-073):_ **TipTap** (ProseMirror, **MIT**) for the Documents
+    rich-text app; documents are stored as HTML.
+  - _PDF viewer (FR-101):_ **pdf.js** (`pdfjs-dist`, **Apache-2.0**), rendered to a
+    canvas in a web worker. _Image viewer (FR-100):_ no external library — the
+    browser decodes the bytes natively via a `data:` URL.
+  - Every integrated third-party library is **acknowledged in the in-app Credits
+    panel** and must be **AGPL-compatible** (MIT/Apache-2.0/BSD/ISC).
 - **Distribution:** published to **npm** so local/LAN users self-host the web app;
   a hosted deployment serves internet-open servers. No native desktop build.
 
@@ -96,6 +108,10 @@ system's "intermediate language" (an _intermediate representation_, IR). Two pie
      `{ name, type, size, mode, owner, mtime }`.
    - `listProcesses() → Process[]`
    - `readFile(path) → bytes` · `writeFile(path, bytes) → void`
+   - **Filesystem mutations** (FR-021): `makeDir`, `createFile`, `move`, `copy`,
+     `remove` — each `→ void` with the uniform ok/failed/unsupported result. The
+     Debian adapter implements them with POSIX commands (`mkdir -p`, `touch`,
+     `mv -n`, `cp -a -n`, `rm -rf`); `move`/`copy` use `-n` so they never clobber.
    - `serviceAction(name, action) → ServiceState`
 
    The value is in the **output type**: if an app knows `listDir` returns a
@@ -123,11 +139,15 @@ over a PTY —it would be fragile and impossible to normalize—. It uses
 **non-interactive, structured primitives** and **emulates the experience on the
 client**:
 
-- **Editor** = `readFile` + `writeFile` + a custom GUI editor (no remote nano is
-  launched).
+- **Editors** = `readFile` + `writeFile` + a custom GUI editor (no remote nano is
+  launched): **Stallman** (code, Monaco, syntax highlight by type, FR-072) and
+  **Documents** (rich text, TipTap, stored as HTML, FR-073).
+- **Viewers** (image FR-100 / PDF FR-101) = `readFile` + client-side rendering in
+  the browser (no remote render).
 - **Monitor** = `listProcesses`/`systemMetrics` by _polling_, not a live `top`.
 - The **only** deliberate exception is the **terminal** app, which does expose the
-  raw shell (there the user sees `bash`/`PowerShell`/`csh`).
+  raw shell (there the user sees `bash`/`PowerShell`/`csh`); it can also start in a
+  given directory (FR-032) by issuing `cd` as the first PTY input.
 
 ### OS adapters
 
@@ -161,16 +181,22 @@ column). Windows is prioritized for popularity despite being the most costly.
 - **File-type handler registry:** each DeskSSH app declares which types it can open.
   It is the basis of "Open" (default handler) and "Open with" (choose handler), and
   the seed of extensibility for future apps.
+  - _Current implementation note (2026-06-27):_ routing is done with **parallel
+    openers** in the desktop context (`openEditor`/`openDoc`/`openImage`/`openPdf`/
+    `openTerminal`) plus extension-based dispatch in the file manager. Folding these
+    into a single `openFile(path)` backed by a real handler registry is the planned
+    refactor (it removes the per-type duplication).
 - **Two opening routes:**
-  - **(A) Render in DeskSSH:** the contract's `readFile` → painted by a GUI handler.
-    With a **size limit**/warning (Art. 8); no handler for the type → route B is
-    offered.
-  - **(B) _Handoff_ to the client:** download over **streaming SFTP** (don't load
-    into memory) to the user's local machine.
-- **Browser limitation (`[NEEDS DECISION]`):** DeskSSH always runs in a browser
-  (hosted or self-hosted), so "Open on the client" can only **download** (and inline
-  depending on type); it cannot force the OS's default app. Resolve as plain
-  download, inline-by-type, or both.
+  - **(A) Render in DeskSSH:** the contract's `readFile` → painted by a GUI handler
+    (Stallman, Documents, image/PDF viewers). With a **size limit**/warning
+    (Art. 8); no handler for the type → route B is offered.
+  - **(B) _Handoff_ to the client:** **download** to the user's local machine
+    (`readFile` → Blob → browser download). Streaming SFTP for large files is a
+    later optimization.
+- **Browser limitation — Resolved (2026-06-27):** DeskSSH always runs in a browser,
+  so "Open on the client" resolves as a **plain download** in v1 (FR-025 / spec
+  §9.8). It cannot force the OS's default app; type-aware inline opening on the
+  client may be revisited post-v1.
 
 ### Parsers and resilience
 
@@ -202,16 +228,23 @@ exitCode}` and makes it queryable from the UI (FR-013, Art. 3).
 ## 6. Phases / milestones
 
 **v1 = focused cut, accessibility first.** v1 app set: connection/hosts, desktop
-shell, file manager, text editor, terminal and **system monitor**. Processes,
-services, log viewer and packages are **post-v1**.
+shell, file manager, **editors (Stallman code + Documents)**, terminal,
+**image/PDF viewers** and **system monitor**. Processes, services, log viewer and
+packages are **post-v1**.
 
 - **M0 — Scaffolding:** monorepo, empty packages, basic CI, license, contributing.
+  ✅
 - **M1 — Connection core:** SSH session (exec/PTY/SFTP) + OS detection +
   Debian/Ubuntu adapter + capability-contract base. Demonstrable via tests/minimal
-  CLI.
-- **M2 — Shell + Terminal + File manager:** first usable desktop.
+  CLI. ✅
+- **M2 — Shell + Terminal + File manager:** first usable desktop. ✅
 - **M3 — Text editor + System monitor + transparency in the UI:** **completes v1.**
-- **── 🚀 v1 release ──**
+  ✅ _(editors + monitor shipped)_
+- **── 🚀 v1 line (published as `deskssh` 0.1.x on npm) ──**
+- **Session-2 feedback (0.1.2–0.1.6, 2026-06-27):** window-button fix, PEM
+  file/paste UI, Credits panel; image + PDF viewers; file-manager overhaul
+  (mutations, own context menu, clipboard, open-in-terminal, download); Documents
+  editor; Stallman → Monaco. All on the 0.1.x line (see `Observaciones/`).
 - **Post-v1 (admin apps):** Processes + Services + Log viewer + Packages.
 - **Post-v1 (hosts):** go down the tier roadmap (Windows → rest of Linux → …).
 - **Post-v1 (hosted):** a hosted web deployment for internet-open servers
@@ -242,5 +275,14 @@ services, log viewer and packages are **post-v1**.
 - **Icon set: Lucide** (ISC — AGPL-compatible, no attribution required).
 - **No native desktop app:** local/LAN use = self-hosted **npm** web app.
 - **v1 credentials: not persisted** — asked per session (FR-005).
+
+**Closed (2026-06-27):**
+
+- **FR-025 "Open on the client" = plain download** in v1 (spec §9.8).
+- **Code editor: Monaco** (lazy-loaded, locally bundled, Vite workers; FR-072).
+- **Document editor: TipTap**, documents stored as HTML (FR-073).
+- **PDF viewer: pdf.js**; **image viewer: native browser decode**, no lib (FR-100/101).
+- **Versioning: stay on the 0.1.x line** (patch bumps) for the session-2 feature
+  work, not 0.2.0/0.3.0.
 
 **Open:** product-level decisions tracked in spec §9 (`ssh-agent`, i18n scope).

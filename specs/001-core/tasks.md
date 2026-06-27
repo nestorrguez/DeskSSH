@@ -17,8 +17,8 @@
 - [x] Credentials (no persistence), ssh-agent (post-v1), drag&drop (post-v1), i18n
       (EN+ES, ready day 1) resolved.
 
-> Only minor open item: browser behavior of "Open on the client" (FR-025) — decided
-> during M2 coding.
+> ~~Only minor open item: browser behavior of "Open on the client" (FR-025).~~
+> **Resolved (2026-06-27): plain download** (spec §9.8).
 
 ---
 
@@ -37,9 +37,9 @@ Goal: an empty but coherent monorepo that builds, lints, tests and publishes.
       via `specs/`). `LICENSE` already present. → Art. 9
 - [x] **M0.6** Minimal i18n scaffolding decision/setup so strings are externalized
       from day 1 (EN + ES catalogs stub). → NFR-i18n
-- [ ] **M0.7** Publish `deskssh` `0.0.1` placeholder to npm (claims the name;
-      `AGPL-3.0-or-later`, public access). **Needs maintainer npm login.** → vision
-      (distribution)
+- [x] **M0.7** Publish `deskssh` to npm (name claimed; `AGPL-3.0-or-later`, public
+      access). Shipped as an installable app (`npx deskssh`), now on the 0.1.x line.
+      → vision (distribution)
 
 **M0 done when:** `pnpm install && pnpm -r build && pnpm -r test` pass in CI and the
 `deskssh` name is reserved on npm.
@@ -91,19 +91,53 @@ log, and a forced parse failure shows raw output without crashing.
 
 ---
 
-## M2 — Shell + Terminal + File manager _(outline)_
+## M2 — Shell + Terminal + File manager — DONE
 
-Desktop shell (windows, taskbar, launcher; FR-010/011/012), Terminal app
-(`xterm.js`, FR-030/031), File manager (browse/CRUD/properties/upload-download,
-FR-020..023), file-open routes + handler registry (FR-025), destructive-action
-confirmations (FR-090). Broken down at the start of M2.
+- [x] **M2.1** Desktop shell: movable/resizable windows, taskbar, app launcher. →
+      FR-010/011/012
+- [x] **M2.2** Terminal app (`xterm.js`) over the PTY WebSocket bridge. → FR-030/031
+- [x] **M2.3** File manager: browse the tree with icons/details. → FR-020
+- [x] **M2.4** SSH host-key verification surfaced in the UI (explicit TOFU +
+      `known_hosts`). → plan §5, Art. 4
 
-## M3 — Editor + System monitor + transparency UI _(outline)_ → completes v1
+## M3 — Editor + System monitor + transparency UI — DONE → v1 line
 
-Text editor via `readFile`/`writeFile` with unsaved-changes guard (FR-070/071),
-System monitor with periodic refresh (FR-050), transparency surfaced in the UI
-(FR-013), in-flight latency/state indicators (FR-092). Broken down at the start of
-M3. → **🚀 v1 release** after M3.
+- [x] **M3.1** Text editor (Stallman) via `readFile`/`writeFile`. → FR-070/071
+- [x] **M3.2** System monitor with periodic refresh. → FR-050
+- [x] **M3.3** Transparency surfaced in the UI (commands run). → FR-013
+- [x] **── 🚀 v1 line published as `deskssh` 0.1.x on npm ──**
+
+## M4 — Session-2 usability feedback (0.1.2–0.1.6) — DONE
+
+From the `Observaciones/` usage diary. **Strict spec-first applies from now on**
+(this milestone was reconciled into the specs on 2026-06-27, after the fact).
+
+- [x] **M4.1** Window-button fix; PEM file/paste UI (load file vs paste, hide key);
+      in-app **Credits** panel acknowledging third-party libs. → FR-002, Art. 9 — `0.1.2`
+- [x] **M4.2** **Image viewer** (PNG/JPEG/GIF-animated/WebP), native browser decode.
+      → FR-100 — `0.1.3`
+- [x] **M4.3** **PDF viewer** (pdf.js, canvas in a worker; page nav + zoom). →
+      FR-101 — `0.1.3`
+- [x] **M4.4** Core **filesystem mutations** (`makeDir`/`createFile`/`move`/`copy`/
+      `remove`) + gateway endpoints + tests. → FR-021
+- [x] **M4.5** **PTY initial directory** (`openPty(cwd)`), gateway/terminal wiring.
+      → FR-032
+- [x] **M4.6** **File manager overhaul**: own context menu (entry + folder-level),
+      create folder/file, rename, cut/copy/paste, delete with confirmation, download
+      ("open on the client"), "open with", "open in terminal". → FR-021/023/025/026/
+      027/090 — `0.1.4`
+- [x] **M4.7** **Documents** editor (TipTap, rich text + plain text, saved as HTML).
+      → FR-073 — `0.1.5`
+- [x] **M4.8** **Stallman → Monaco** code editor with syntax highlighting by file
+      type (lazy-loaded). → FR-072 — `0.1.6`
+
+## Backlog (next, spec-first)
+
+- [ ] **B.1** Unify the parallel openers into a single `openFile(path)` + handler
+      registry (FR-025; removes per-type duplication — see `plan.md §4`).
+- [ ] **B.2** Editor **unsaved-changes guard on window close** (FR-071 is specified
+      but only a dirty indicator ships today).
+- [ ] **B.3** File **upload** from the client (FR-023; download already ships).
 
 ## Post-v1 _(pointer)_
 

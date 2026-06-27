@@ -78,9 +78,11 @@ into commands executed on the host. No agents, no streaming, and with
 ## 6. Functional requirements
 
 > **v1 app scope (focused cut):** Connection/hosts, Desktop shell, File manager,
-> Text editor, Terminal and **System monitor**. The apps marked _(post-v1)_ below
-> —Processes, Services, Log viewer, Packages— are specified here but implemented
-> after v1 (see `plan.md §6`).
+> **Editors** (Stallman = code, Documents = rich text), Terminal, **Image/PDF
+> viewers** and **System monitor**. The apps marked _(post-v1)_ below —Processes,
+> Services, Log viewer, Packages— are specified here but implemented after v1 (see
+> `plan.md §6`). _(The second editor and the viewers were added from session-2
+> usability feedback, 2026-06-27; see `Observaciones/`.)_
 
 ### Connection and hosts
 
@@ -126,14 +128,23 @@ into commands executed on the host. No agents, no streaming, and with
   Vocabulary note: **"the client" = the user's local machine** (their browser/OS in
   the web model), not the DeskSSH server.
   Since DeskSSH always runs in a browser (hosted or self-hosted npm), it cannot
-  force opening with the OS's default program. `[NEEDS DECISION]` does "Open on the
-  client" resolve as a **plain download**, as **inline opening** depending on type,
-  or both?
+  force opening with the OS's default program. **Resolved (2026-06-27): "Open on
+  the client" in v1 = plain download** (save to the user's machine via the
+  browser); type-aware inline opening may come later. See §9.8.
+
+- **FR-026** Provide DeskSSH's **own context menu** (right-click) on entries — not
+  the browser's — with the relevant actions (open, open with, open in terminal,
+  download, rename, cut, copy, delete) and a folder-level menu (new folder/file,
+  paste, open in terminal, refresh).
+- **FR-027** **Open a directory in the Terminal**: launch (or re-target) the
+  Terminal app already positioned in the selected folder, without manual `cd`.
 
 ### App: Terminal
 
 - **FR-030** Real interactive terminal (PTY over SSH) with resizing.
 - **FR-031** Reuse the already-connected host's SSH session.
+- **FR-032** Start the shell in a given directory when opened from elsewhere
+  (e.g. the file manager's "Open in terminal", FR-027).
 
 ### App: Processes / Task manager _(post-v1)_
 
@@ -150,10 +161,29 @@ into commands executed on the host. No agents, no streaming, and with
 - **FR-061** Start, stop and restart services (mandatory confirmation).
 - **FR-062** View a service's recent state/log.
 
-### App: Text editor
+### App: Editors (code + documents)
+
+DeskSSH ships two distinct editors: **Stallman**, the code editor, and
+**Documents**, a rich-text/plain-text document editor.
 
 - **FR-070** Open, edit and save remote text files.
 - **FR-071** Warn about unsaved edits on close.
+- **FR-072** **Code editor (Stallman):** syntax highlighting selected from the file
+  type, covering at least C, C++, C#, Java, Python, JS, TS, SQL, HTML, XML, JSON,
+  Markdown and plain text; unknown types fall back to plain text.
+- **FR-073** **Document editor (Documents):** a separate app for **rich text and
+  plain text**, with basic formatting (bold, italic, strikethrough, inline code,
+  headings, bullet/numbered lists, blockquote, undo/redo). Documents are stored as
+  HTML. Reachable from the launcher and from the file manager's "Open with".
+
+### App: Image / PDF viewers
+
+The GUI is synthesised on the client (Art. 10): viewers read the file bytes via
+`readFile` and render them in the browser; nothing is rendered on the remote host.
+
+- **FR-100** **Image viewer:** display PNG, JPEG, GIF (including animated) and WebP,
+  with a fit / actual-size toggle.
+- **FR-101** **PDF viewer:** display PDF files with page navigation and zoom.
 
 ### App: Log viewer _(post-v1)_
 
@@ -203,4 +233,8 @@ into commands executed on the host. No agents, no streaming, and with
    ES** (NFR-Accessibility/i18n).
 7. ~~v1 app set~~ → **Resolved (2026-06-25):** focused cut = Connection/hosts,
    Shell, File manager, Editor, Terminal and System monitor; the rest _(post-v1)_
-   (see §6 and `plan.md §6`).
+   (see §6 and `plan.md §6`). _Extended (2026-06-27) with the Documents editor and
+   the Image/PDF viewers from session-2 feedback._
+8. ~~FR-025 "Open on the client"~~ → **Resolved (2026-06-27): plain download** in
+   v1 (save to the user's machine via the browser). Type-aware inline opening on
+   the client may be revisited post-v1.
