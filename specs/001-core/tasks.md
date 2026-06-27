@@ -168,30 +168,38 @@ Core/gateway/monitor validated against a real Debian 13 host (test VMs): listPro
 (127 procs), signalProcess kills a spawned process, and as root serviceAction restarts
 ssh → active/running. Remaining: clipboard (M5.5/M5.7).
 
-## M6 — Privilege elevation (sudo) — TODO
+## M6 — Privilege elevation (sudo) — DONE (`0.1.7`)
 
 From 2026-06-27 feedback; specced first (spec §6 FR-093..095, `plan.md §5`). Lets a
-failed-for-privilege action be retried elevated. Tightly coupled to M5.3 service
-control (which needs root). Passwords used once, never persisted or logged.
+failed-for-privilege action be retried elevated. Passwords used once, never persisted
+or logged.
 
 ### Core / server
 
-- [ ] **M6.1** Tag permission-style failures (stderr heuristics) so the UI can offer
-      elevation; add `canElevate` / `escalationAvailable` probes (`id -nG`, presence
-      of `sudo`/`su`). → FR-093
-- [ ] **M6.2** Elevated execution paths: current user `sudo -S -p '' <cmd>` (password
-      on stdin); other user `su - <user> -c <cmd>` over a PTY. **Redact** the password
-      from the transparency log. → FR-094/095, Art. 4
-- [ ] **M6.3** Gateway endpoint(s) to run a tagged action elevated with a one-shot
-      credential (never stored). → FR-093/094/095
+- [x] **M6.1** `isPermissionDenied(text)` heuristic + `detectPrivilege(exec)` probe
+      (`id -u`/`id -nG`, presence of `sudo`/`su`) → canSudo/escalationAvailable.
+      → FR-093
+- [x] **M6.2** Elevated execution: `withElevation(exec, pw)` runs `sudo -S -p '' sh -c
+    <cmd>` with the password on **stdin** (CommandExecutor gained an `input` arg);
+      the transparency log forwards but never records it. Other-user path = a
+      transient SSH session (below), not su-over-PTY. → FR-094/095, Art. 4
+- [x] **M6.3** Gateway: `/api/privilege` probe; `/api/signal` and `/api/service`
+      accept a one-shot `elevate` ({current}|{user}); `server/elevate.ts` builds the
+      elevated adapter (current-user sudo, or a transient session as another user) and
+      tears it down after. → FR-093/094/095
 
 ### Web (UI)
 
-- [ ] **M6.4** **Modal 1** (password-only, current user) shown automatically when an
-      action needs elevation and the user is sudo-capable. → FR-094
-- [ ] **M6.5** **Insufficient-privilege flow**: "your account lacks permission" →
+- [x] **M6.4** **Modal 1** (password-only, current user) shown automatically when an
+      action is denied and the user is sudo-capable. → FR-094
+- [x] **M6.5** **Insufficient-privilege flow**: "your account lacks permission" →
       if escalation available, "I have administrator credentials" (→ **Modal 2**,
-      username+password) + Cancel; else a single "Understood". → FR-095
+      username+password) + Cancel; else a single "Understood". `useElevation` hook
+      drives it from the action result. → FR-095
+
+Core/gateway validated on a real Debian 13 host: a non-root sudoer's denied service
+restart succeeds when elevated, and the password never reaches the transparency log.
+Full UI flow + the transient other-user path: verify manually against the test VMs.
 
 **M6 done when:** a non-root user can restart a service from the monitor by entering
 admin credentials in Modal 2, an unprivileged-but-sudo user via Modal 1, and a user
