@@ -215,6 +215,37 @@ folder. Four actions — two copy, two paste:
   (Art. 7).
 - **FR-092** Show latency/state of in-flight network operations (Art. 8).
 
+#### Privilege elevation (sudo) — FR-093..095
+
+When a capability fails for lack of privilege (e.g. service control, signalling
+another user's process, editing a root-owned file), DeskSSH can re-run it elevated.
+A password entered here is used **once, in memory**, never persisted and never
+written to the transparency log (Art. 4 / FR-005).
+
+- **FR-093** **Elevation entry point.** A capability result that is a
+  permission-style failure can be retried with elevation. DeskSSH decides the path
+  from whether the **connected user can elevate** (is sudo-capable):
+  - **can elevate →** FR-094 (password-only, automatic);
+  - **cannot →** FR-095 (the insufficient-privilege flow).
+- **FR-094** **Current-user elevation (Modal 1 — password only).** If the connected
+  user is sudo-capable, DeskSSH shows a **password-only** modal — implicitly **the
+  current user** — and retries the action with that password fed to `sudo` once.
+  This is a confirmation, so it appears **automatically** when elevation is needed.
+- **FR-095** **Insufficient-privilege flow (the "discreet" path).** Users often do
+  not know their privilege level, so when the current user **cannot** elevate,
+  DeskSSH first states plainly: **"your account does not have permission for this
+  action."** Then, depending on whether the host **permits privilege escalation at
+  all**:
+  - **escalation available →** two actions: **"I have administrator credentials"**
+    (opens **Modal 2**, a **username + password** dialog to authenticate as another
+    privileged user / root) and **Cancel**;
+  - **escalation unavailable →** a single **"Understood"** acknowledgement (no path
+    forward).
+- **Modal 2 (username + password)** runs the action as the supplied user (e.g. an
+  admin or root), credentials used once and discarded. Resolved (2026-06-27): the
+  trigger is **reactive/automatic** and the path is **auto-detected** from the
+  host; see §9.11.
+
 ## 7. Non-functional requirements
 
 - **NFR-Security** — Fully comply with Article 4 of the constitution.
@@ -264,3 +295,10 @@ folder. Four actions — two copy, two paste:
     (FR-053): generic processes get signals (stop/reload, FR-052); true restart is
     done via the service manager (systemctl). Process list lives in the System
     monitor (FR-051), not a separate app.
+11. ~~Privilege-elevation UX~~ → **Resolved (2026-06-27)** (FR-093..095): trigger is
+    **reactive/automatic** (offered when an action fails for privilege); the path is
+    **auto-detected** — sudo-capable user → password-only Modal 1 (current user);
+    otherwise a "your account lacks permission" notice, then either "I have
+    administrator credentials" → username+password Modal 2 (if the host allows
+    escalation) or just "Understood" (if it does not). Passwords used once, never
+    persisted or logged.

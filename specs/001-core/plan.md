@@ -243,6 +243,30 @@ exitCode}` and makes it queryable from the UI (FR-013, Art. 3).
 - SSH host key verification (avoid MITM); `known_hosts` policy.
 - Auditing: the transparency log also serves as an audit trail.
 
+### Privilege elevation (sudo) — FR-093..095
+
+When a capability fails for lack of privilege, DeskSSH can re-run it elevated.
+
+- **Detecting a privilege failure:** a `failed` result whose stderr looks like a
+  permission error (`Permission denied`, `must be root`, `Authentication is
+required`, `access denied`, `not in the sudoers file`…). The adapter/gateway tags
+  it so the UI can offer elevation.
+- **Can the user elevate?** Heuristic, cheap, no prompt: the user is in a
+  sudo-capable group (`id -nG` ∋ `sudo`/`wheel`/`admin`) and `sudo` exists. **Is
+  escalation possible at all?** `sudo` or `su` is present on the host.
+- **Running elevated (the command never carries the password in `argv`):**
+  - **Current user (Modal 1):** `sudo -S -p '' <cmd>` with the password written to
+    **stdin** once. (`-S` reads the password from stdin, `-p ''` suppresses the
+    prompt.)
+  - **Another user / root (Modal 2):** `su - <user> -c '<cmd>'` driven over a **PTY**
+    (su reads the password from a tty, not stdin), the password typed once.
+- **Secrets (Art. 4 / FR-005):** the password lives only in memory for the single
+  elevated run and is then discarded — never persisted. The **transparency log must
+  redact it**: log the elevated command (e.g. `sudo systemctl restart nginx`) but
+  **never** the password bytes fed on stdin/PTY.
+- This is **cross-cutting**: any capability can be retried elevated; v1 wires it
+  where it matters first (service control, signalling, root-owned file ops).
+
 ## 6. Phases / milestones
 
 **v1 = focused cut, accessibility first.** v1 app set: connection/hosts, desktop

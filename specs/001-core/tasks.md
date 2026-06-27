@@ -131,7 +131,7 @@ From the `Observaciones/` usage diary. **Strict spec-first applies from now on**
 - [x] **M4.8** **Stallman → Monaco** code editor with syntax highlighting by file
       type (lazy-loaded). → FR-072 — `0.1.6`
 
-## M5 — Process/service control in Monitor + shared clipboard — TODO
+## M5 — Process/service control in Monitor + shared clipboard — IN PROGRESS
 
 From 2026-06-27 feedback; specs written first (spec §6 FR-051..053, FR-110..112;
 `plan.md §4`). Brings process management forward into the System monitor (no
@@ -139,34 +139,64 @@ separate Processes app) and adds a host↔client clipboard for text + files.
 
 ### Core (capability contract)
 
-- [ ] **M5.1** Implement `listProcesses()` in the Debian adapter via machine-readable
-      `ps -eo pid,user,pcpu,pmem,comm,args` → `Process[]`, with raw-output fallback.
+- [x] **M5.1** `listProcesses()` in the Debian adapter via machine-readable
+      `ps -eo pid,user,pcpu,pmem,args` → `Process[]`, with raw-output fallback.
       → FR-051, Art. 6/7
-- [ ] **M5.2** Add `signalProcess(pid, signal)` to the contract + Debian adapter
-      (`kill -SIGTERM|-SIGKILL|-SIGHUP`). → FR-052
-- [ ] **M5.3** Add `serviceAction(name, action)` (start/stop/restart via
-      `systemctl`, state via `systemctl show`) → `ServiceState`. → FR-053
+- [x] **M5.2** `signalProcess(pid, signal)` on the contract + Debian adapter
+      (`kill -s TERM|KILL|HUP`). → FR-052
+- [x] **M5.3** `serviceAction(name, action)` (start/stop/restart via `systemctl`,
+      state via `systemctl show`) → `ServiceState`. → FR-053
 
 ### Server (gateway)
 
-- [ ] **M5.4** Endpoints for `listProcesses`, `signalProcess`, `serviceAction`
-      (session-scoped, confirmation enforced client-side) + tests. → FR-051/052/053
+- [x] **M5.4** Endpoints `/api/processes`, `/api/signal`, `/api/service` (validated
+      input, session-scoped) + tests. → FR-051/052/053
 - [ ] **M5.5** Session-scoped **text clipboard** buffer in the gateway for the
       DeskSSH-clipboard text path. → FR-110
 
 ### Web (UI)
 
-- [ ] **M5.6** **System monitor**: process table (PID/user/%CPU/%MEM/command, sort + filter, periodic refresh) with Stop (SIGTERM→SIGKILL) / Reload (SIGHUP) and,
-      for service-backed processes, Restart — all behind confirmation. →
+- [x] **M5.6** **System monitor**: process table (PID/user/%CPU/%MEM/command, filter + CPU sort, periodic refresh) with Stop (SIGTERM) / Reload (SIGHUP) / Force stop
+      (SIGKILL) and a service control row (start/stop/restart) — all confirmed. →
       FR-051/052/053/090
 - [ ] **M5.7** **Shared clipboard**: two Copy (Copy / Copy to my computer) and two
       Paste (Paste / Paste from my computer). Text via `navigator.clipboard`; files
       via download/upload (FR-023). Surfaced in the file manager + text selections. →
       FR-110/111/112
 
-**M5 done when:** processes can be listed, signalled and (for services) restarted
-from the monitor with confirmations, against a real Debian 13 host; and text/files
-move both ways through the shared clipboard. Validate via the harness + the test VMs.
+Core/gateway/monitor validated against a real Debian 13 host (test VMs): listProcesses
+(127 procs), signalProcess kills a spawned process, and as root serviceAction restarts
+ssh → active/running. Remaining: clipboard (M5.5/M5.7).
+
+## M6 — Privilege elevation (sudo) — TODO
+
+From 2026-06-27 feedback; specced first (spec §6 FR-093..095, `plan.md §5`). Lets a
+failed-for-privilege action be retried elevated. Tightly coupled to M5.3 service
+control (which needs root). Passwords used once, never persisted or logged.
+
+### Core / server
+
+- [ ] **M6.1** Tag permission-style failures (stderr heuristics) so the UI can offer
+      elevation; add `canElevate` / `escalationAvailable` probes (`id -nG`, presence
+      of `sudo`/`su`). → FR-093
+- [ ] **M6.2** Elevated execution paths: current user `sudo -S -p '' <cmd>` (password
+      on stdin); other user `su - <user> -c <cmd>` over a PTY. **Redact** the password
+      from the transparency log. → FR-094/095, Art. 4
+- [ ] **M6.3** Gateway endpoint(s) to run a tagged action elevated with a one-shot
+      credential (never stored). → FR-093/094/095
+
+### Web (UI)
+
+- [ ] **M6.4** **Modal 1** (password-only, current user) shown automatically when an
+      action needs elevation and the user is sudo-capable. → FR-094
+- [ ] **M6.5** **Insufficient-privilege flow**: "your account lacks permission" →
+      if escalation available, "I have administrator credentials" (→ **Modal 2**,
+      username+password) + Cancel; else a single "Understood". → FR-095
+
+**M6 done when:** a non-root user can restart a service from the monitor by entering
+admin credentials in Modal 2, an unprivileged-but-sudo user via Modal 1, and a user
+on a host without escalation sees the "Understood" notice — no password ever logged
+or persisted. Validate against the test VMs.
 
 ## Next / post-v1
 
