@@ -6,6 +6,7 @@
 import { randomUUID } from 'node:crypto';
 import type {
   Capabilities,
+  CommandExecutor,
   OsInfo,
   PtySession,
   TransparencyLog,
@@ -21,6 +22,10 @@ export interface SessionEntry {
   readonly home: string;
   readonly os: OsInfo;
   readonly adapter: Capabilities;
+  /** Transparency-wrapped executor, used to build an elevated adapter (FR-094). */
+  readonly executor: CommandExecutor;
+  /** Raw connection target, for opening a transient session as another user (FR-095). */
+  readonly endpoint: { readonly host: string; readonly port: number };
   readonly log: TransparencyLog;
   /** Open an interactive PTY (Terminal app). Optional: not all openers provide it.
    *  `cwd` starts the shell in a directory ("Open in terminal"). */

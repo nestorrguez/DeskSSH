@@ -14,6 +14,8 @@ import {
 import { FileKnownHosts } from './known-hosts.js';
 import { attachTerminal } from './terminal.js';
 import { serveStatic } from './static.js';
+import { makeElevated, type Elevate } from './elevate.js';
+import { detectPrivilege } from '@deskssh/core';
 
 const MAX_BODY_BYTES = 1_000_000; // PEM keys are small; cap to avoid abuse.
 
@@ -87,6 +89,20 @@ function asOneOf<const T extends readonly string[]>(
     throw new HttpError(400, `Invalid "${key}": expected one of ${allowed.join(', ')}`);
   }
   return value as T[number];
+}
+
+/** Validate an optional one-shot elevation block (current user or another user). */
+function parseElevate(value: unknown): Elevate | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== 'object') throw new HttpError(400, 'Invalid "elevate"');
+  const o = value as Record<string, unknown>;
+  if (o['kind'] === 'current' && typeof o['password'] === 'string') {
+    return { kind: 'current', password: o['password'] };
+  }
+  if (o['kind'] === 'user' && typeof o['user'] === 'string' && typeof o['password'] === 'string') {
+    return { kind: 'user', user: o['user'], password: o['password'] };
+  }
+  throw new HttpError(400, 'Invalid "elevate": expected { kind: "current"|"user", … }');
 }
 
 /** Build (but do not start) the gateway HTTP server. */
@@ -242,15 +258,39 @@ async function handle(
     const pid = Number(body['pid']);
     if (!Number.isInteger(pid) || pid <= 0) throw new HttpError(400, 'Invalid "pid"');
     const signal = asOneOf(body, 'signal', ['TERM', 'KILL', 'HUP'] as const);
-    return sendJson(res, 200, { result: await entry.adapter.signalProcess(pid, signal) });
+    const elevate = parseElevate(body['elevate']);
+    if (!elevate) {
+      return sendJson(res, 200, { result: await entry.adapter.signalProcess(pid, signal) });
+    }
+    const { adapter, cleanup } = await makeElevated(entry, elevate);
+    try {
+      return sendJson(res, 200, { result: await adapter.signalProcess(pid, signal) });
+    } finally {
+      cleanup();
+    }
   }
 
   if (route === 'POST /api/service') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;
     const entry = requireSession(manager, body);
+    const name = asString(body, 'name');
     const action = asOneOf(body, 'action', ['start', 'stop', 'restart'] as const);
-    const result = await entry.adapter.serviceAction(asString(body, 'name'), action);
-    return sendJson(res, 200, { result });
+    const elevate = parseElevate(body['elevate']);
+    if (!elevate) {
+      return sendJson(res, 200, { result: await entry.adapter.serviceAction(name, action) });
+    }
+    const { adapter, cleanup } = await makeElevated(entry, elevate);
+    try {
+      return sendJson(res, 200, { result: await adapter.serviceAction(name, action) });
+    } finally {
+      cleanup();
+    }
+  }
+
+  if (route === 'POST /api/privilege') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const entry = requireSession(manager, body);
+    return sendJson(res, 200, { privilege: await detectPrivilege(entry.executor) });
   }
 
   sendJson(res, 404, { error: `No route for ${route}` });

@@ -74,11 +74,32 @@ const fakeOpener: SessionOpener = (req) => {
     serviceAction: (name: string, _action: string) =>
       Promise.resolve(ok({ name, active: true, enabled: true, status: 'running' }, 'raw')),
   } as unknown as Capabilities;
+  // A fake executor for the privilege probe and sudo-wrapped commands (the elevated
+  // "current user" path builds a Debian adapter over withElevation(this, password)).
+  const executor = {
+    exec(command: string) {
+      if (command.includes('id -u'))
+        return Promise.resolve({
+          stdout: 'UID=1000\nGROUPS=me sudo users\nHAVE_SUDO\nHAVE_SU',
+          stderr: '',
+          exitCode: 0,
+        });
+      if (command.includes('systemctl show'))
+        return Promise.resolve({
+          stdout: 'ActiveState=active\nUnitFileState=enabled\nSubState=running\n',
+          stderr: '',
+          exitCode: 0,
+        });
+      return Promise.resolve({ stdout: '', stderr: '', exitCode: 0 });
+    },
+  };
   return Promise.resolve({
     host: `${req.username}@${req.host}`,
     home: '/home/me',
     os: { family: 'debian', prettyName: 'Ubuntu' },
     adapter,
+    executor,
+    endpoint: { host: req.host, port: req.port ?? 22 },
     log,
     close: () => {},
   });
@@ -238,5 +259,38 @@ describe('gateway', () => {
     expect((await post('/api/service', { sessionId, name: 'ssh', action: 'nuke' })).status).toBe(
       400,
     );
+  });
+
+  it('privilege probe + current-user elevation', async () => {
+    const sessionId = await connectSession();
+
+    const priv = await post('/api/privilege', { sessionId });
+    expect(priv.json.privilege).toEqual({
+      isRoot: false,
+      canSudo: true,
+      escalationAvailable: true,
+    });
+
+    // Elevated service action (current user, sudo): runs through the fake executor.
+    const elevated = await post('/api/service', {
+      sessionId,
+      name: 'ssh',
+      action: 'restart',
+      elevate: { kind: 'current', password: 'pw' },
+    });
+    expect(elevated.json.result.kind).toBe('ok');
+    expect(elevated.json.result.value.status).toBe('running');
+
+    // A malformed elevate block is rejected.
+    expect(
+      (
+        await post('/api/service', {
+          sessionId,
+          name: 'ssh',
+          action: 'restart',
+          elevate: { kind: 'x' },
+        })
+      ).status,
+    ).toBe(400);
   });
 });

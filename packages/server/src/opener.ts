@@ -102,6 +102,8 @@ export function createSshOpener(store: KnownHostsStore): SessionOpener {
       home,
       os,
       adapter,
+      executor,
+      endpoint: { host: req.host, port: req.port ?? 22 },
       log,
       openPty: (cols, rows, cwd) => session.openPty(cols, rows, cwd),
       close: () => session.close(),
