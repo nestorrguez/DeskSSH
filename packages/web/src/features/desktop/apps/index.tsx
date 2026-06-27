@@ -4,6 +4,7 @@ import {
   TerminalSquare,
   Activity,
   FileText,
+  PenLine,
   Image,
   FileType,
   Heart,
@@ -14,6 +15,7 @@ import { FilesApp } from './FilesApp';
 import { MonitorApp } from './MonitorApp';
 import { SystemApp } from './SystemApp';
 import { StallmanApp } from './StallmanApp';
+import { DocumentsApp } from './DocumentsApp';
 import { TerminalApp } from './TerminalApp';
 import { ImageViewerApp } from './ImageViewerApp';
 import { PdfViewerApp } from './PdfViewerApp';
@@ -35,6 +37,13 @@ export function getApps(t: Translator): AppDefinition[] {
       icon: FileText,
       defaultSize: { w: 600, h: 480 },
       render: (ctx) => <StallmanApp {...ctx} />,
+    },
+    {
+      id: 'docs',
+      title: t('apps.docs'),
+      icon: PenLine,
+      defaultSize: { w: 640, h: 520 },
+      render: (ctx) => <DocumentsApp {...ctx} />,
     },
     {
       id: 'monitor',

@@ -20,6 +20,7 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
   const [editorTarget, setEditorTarget] = useState<string | null>(null);
   const [imageTarget, setImageTarget] = useState<string | null>(null);
   const [pdfTarget, setPdfTarget] = useState<string | null>(null);
+  const [docTarget, setDocTarget] = useState<string | null>(null);
   const [terminalCwd, setTerminalCwd] = useState<string | null>(null);
   const [terminalReq, setTerminalReq] = useState(0);
 
@@ -53,6 +54,16 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
     [apps, wm],
   );
 
+  // Let any app open a file in the Documents (rich-text) editor.
+  const openDoc = useCallback(
+    (path: string) => {
+      setDocTarget(path);
+      const docs = apps.find((a) => a.id === 'docs');
+      if (docs) wm.openApp(docs);
+    },
+    [apps, wm],
+  );
+
   // Open (or re-target) the terminal in a directory. The bumped request lets an
   // already-open terminal cd into the new directory instead of reconnecting.
   const openTerminal = useCallback(
@@ -74,6 +85,8 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
     openImage,
     pdfTarget,
     openPdf,
+    docTarget,
+    openDoc,
     terminalCwd,
     terminalReq,
     openTerminal,

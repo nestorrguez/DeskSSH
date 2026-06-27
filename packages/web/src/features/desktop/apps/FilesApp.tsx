@@ -15,6 +15,7 @@ import {
   ClipboardPaste,
   Trash2,
   FileText,
+  PenLine,
   Image,
   FileType,
 } from 'lucide-react';
@@ -71,7 +72,15 @@ function EntryIcon({ type }: { type: FileEntry['type'] }) {
 type Clipboard = { from: string; name: string; op: 'cut' | 'copy' };
 type NameDialog = { mode: 'newFolder' | 'newFile' | 'rename'; value: string; target?: FileEntry };
 
-export function FilesApp({ t, session, openEditor, openImage, openPdf, openTerminal }: AppContext) {
+export function FilesApp({
+  t,
+  session,
+  openEditor,
+  openImage,
+  openPdf,
+  openDoc,
+  openTerminal,
+}: AppContext) {
   const [path, setPath] = useState(session.home);
   const [entries, setEntries] = useState<readonly FileEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -273,6 +282,9 @@ export function FilesApp({ t, session, openEditor, openImage, openPdf, openTermi
                       <ContextMenuSubContent>
                         <ContextMenuItem onSelect={() => openEditor(joinPath(path, entry.name))}>
                           <FileText className="text-muted-foreground" /> {t('apps.editor')}
+                        </ContextMenuItem>
+                        <ContextMenuItem onSelect={() => openDoc(joinPath(path, entry.name))}>
+                          <PenLine className="text-muted-foreground" /> {t('apps.docs')}
                         </ContextMenuItem>
                         <ContextMenuItem onSelect={() => openImage(joinPath(path, entry.name))}>
                           <Image className="text-muted-foreground" /> {t('apps.viewer')}

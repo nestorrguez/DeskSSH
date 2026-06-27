@@ -86,3 +86,64 @@
       sans-serif;
   }
 }
+
+/* Documents app (TipTap/ProseMirror) editor surface. */
+.deskssh-doc .ProseMirror {
+  min-height: 100%;
+  padding: 1rem 1.25rem;
+  outline: none;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.deskssh-doc .ProseMirror:focus {
+  outline: none;
+}
+.deskssh-doc .ProseMirror > * + * {
+  margin-top: 0.6em;
+}
+.deskssh-doc .ProseMirror h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.deskssh-doc .ProseMirror h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.deskssh-doc .ProseMirror h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.deskssh-doc .ProseMirror ul,
+.deskssh-doc .ProseMirror ol {
+  padding-left: 1.5rem;
+}
+.deskssh-doc .ProseMirror ul {
+  list-style: disc;
+}
+.deskssh-doc .ProseMirror ol {
+  list-style: decimal;
+}
+.deskssh-doc .ProseMirror blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1rem;
+  color: var(--muted-foreground);
+}
+.deskssh-doc .ProseMirror code {
+  background: var(--muted);
+  padding: 0.1em 0.3em;
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+}
+.deskssh-doc .ProseMirror pre {
+  background: var(--muted);
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+}
+.deskssh-doc .ProseMirror pre code {
+  background: none;
+  padding: 0;
+}

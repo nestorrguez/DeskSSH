@@ -30,6 +30,7 @@ const CREDITS: Credit[] = [
     use: 'PDF rendering',
     url: 'https://mozilla.github.io/pdf.js',
   },
+  { name: 'TipTap', license: 'MIT', use: 'Rich-text editor', url: 'https://tiptap.dev' },
   { name: 'ssh2', license: 'MIT', use: 'SSH transport', url: 'https://github.com/mscdex/ssh2' },
   { name: 'ws', license: 'MIT', use: 'WebSocket', url: 'https://github.com/websockets/ws' },
   {
