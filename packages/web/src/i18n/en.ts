@@ -35,7 +35,6 @@ export const en = {
   'connected.empty': 'Empty directory',
   'desktop.start': 'Apps',
   'desktop.apps': 'Apps',
-  'desktop.session': 'Session',
   'desktop.disconnect': 'Disconnect',
   'desktop.comingSoon': 'Coming soon',
   'apps.files': 'Files',

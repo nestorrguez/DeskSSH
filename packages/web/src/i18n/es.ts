@@ -36,7 +36,6 @@ export const es: Record<MessageKey, string> = {
   'connected.empty': 'Directorio vacío',
   'desktop.start': 'Apps',
   'desktop.apps': 'Aplicaciones',
-  'desktop.session': 'Sesión',
   'desktop.disconnect': 'Desconectar',
   'desktop.comingSoon': 'Próximamente',
   'apps.files': 'Archivos',

@@ -103,10 +103,10 @@ into commands executed on the host. No agents, no streaming, and with
   surfaces (context menus, dialogs, the launcher) must always render **above** the
   windows.
 - **FR-011** App launcher ("start menu") to open the available apps, laid out in a
-  structured, **Windows-XP-style arrangement** (a header with the session identity,
-  an app list, a places/session column and a footer with Disconnect) — the
-  _arrangement_, not the visual styling (no bevels/gradients; keep DeskSSH's flat
-  look).
+  structured, **Windows-XP-style arrangement**: a header that is the single home for
+  the **session identity** (host + OS — never repeated elsewhere in the menu), a
+  single **app list** (sorted alphabetically by name), and a footer with Disconnect — the _arrangement_, not the
+  visual styling (no bevels/gradients; keep DeskSSH's flat look).
 - **FR-012** Support multiple windows/apps open simultaneously over one session.
 - **FR-013** Command transparency: every command DeskSSH runs is inspectable
   (Art. 3). It lives in its **own app, "Command history"** (a chronological list of

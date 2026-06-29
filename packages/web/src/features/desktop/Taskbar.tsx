@@ -48,15 +48,15 @@ export function Taskbar({
 
   return (
     <footer className="flex h-12 shrink-0 items-center gap-2 border-t bg-card/80 px-2 backdrop-blur">
-      {/* Start menu — Windows-XP-style arrangement (header / apps + session / footer),
-          DeskSSH's flat visual style (FR-011). */}
+      {/* Start menu — Windows-XP-style arrangement (header / alphabetical app list /
+          footer), DeskSSH's flat visual style (FR-011). */}
       <Popover open={menuOpen} onOpenChange={setMenuOpen}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-2">
             <LayoutGrid className="size-4" aria-hidden /> {t('desktop.start')}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" side="top" className="w-[26rem] overflow-hidden p-0">
+        <PopoverContent align="start" side="top" className="w-72 overflow-hidden p-0">
           {/* Header: session identity */}
           <div className="flex items-center gap-3 bg-primary/10 px-4 py-3">
             <div className="grid size-9 shrink-0 place-items-center rounded-md bg-primary/20 text-primary">
@@ -68,14 +68,15 @@ export function Taskbar({
             </div>
           </div>
 
-          <div className="grid grid-cols-[1fr_10.5rem]">
-            {/* Left: all apps */}
-            <div className="p-2">
-              <div className="px-2 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                {t('desktop.apps')}
-              </div>
-              <div className="max-h-72 overflow-auto">
-                {apps.map((app) => {
+          {/* App list — the single column (identity lives only in the header above) */}
+          <div className="p-2">
+            <div className="px-2 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+              {t('desktop.apps')}
+            </div>
+            <div className="max-h-80 overflow-auto">
+              {[...apps]
+                .sort((a, b) => a.title.localeCompare(b.title))
+                .map((app) => {
                   const Icon = app.icon;
                   return (
                     <button
@@ -91,28 +92,6 @@ export function Taskbar({
                     </button>
                   );
                 })}
-              </div>
-            </div>
-
-            {/* Right: session / places */}
-            <div className="border-l bg-muted/30 p-3">
-              <div className="pb-1.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-                {t('desktop.session')}
-              </div>
-              <dl className="flex flex-col gap-2 text-xs">
-                <div>
-                  <dt className="text-muted-foreground">{t('system.host')}</dt>
-                  <dd className="truncate">{host}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t('system.os')}</dt>
-                  <dd className="truncate">{os}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t('system.home')}</dt>
-                  <dd className="truncate font-mono">{session.home}</dd>
-                </div>
-              </dl>
             </div>
           </div>
 

@@ -220,8 +220,12 @@ existing capabilities + the M6 elevation runner.
       upload) route through the `useElevation` runner; the file-op gateway endpoints
       gained an optional `elevate` via a shared `runCap`. Delete keeps confirmation.
       → FR-029/090/093..095 — `0.1.8`
-- [ ] **M7.4** Verify manually against the test VMs (a root-owned op → elevation;
-      a name collision → conflict modal; an upload round-trip).
+- [x] **M7.4** Verified against the `deskssh-xfce` VM (Debian 13) through the gateway:
+      a `/etc` write denied unelevated then succeeding with current-user elevation
+      (+ elevated remove), `listDir` reporting the existing name that drives the
+      conflict modal (Keep both = suffixed write, Replace = remove+rewrite), and an
+      upload round-trip (writeFile base64 → readFile, bytes match). Confirmed the
+      elevation password never reaches the transparency log (`sudo -S` via stdin).
 
 ## M8 — Desktop polish: stacking fix, System info, Command history, launcher — TODO
 
@@ -238,7 +242,14 @@ From 2026-06-27 in-app testing. Specced first (spec §6 FR-010/011/013/016).
 - [x] **M8.4** **Launcher** redesigned to a Windows-XP-style arrangement (header
       with session identity, scrollable app list, session/places column, Disconnect
       footer) — arrangement only, flat visual style kept. → FR-011 — `0.1.9`
-- [ ] **M8.5** Verify the new apps + launcher in the running app against the VMs.
+  - **M8.4b** (2026-06-29 feedback) De-duplicated the menu: the session identity
+    (host + OS) now lives **only** in the header (was repeated in a right
+    session/places column, since removed → single column), and the app list is
+    **sorted alphabetically**. Spec FR-011 updated first. → FR-011 — `0.1.9`
+- [x] **M8.5** Verified against the `deskssh-xfce` VM: `systemInfo()` returns a
+      13-field fastfetch snapshot (os/kernel/host/packages/cpu/mem/disk/IP), and the
+      Command-history source (`/api/transparency`) returns a chronological log with
+      `command` + `exitCode` per entry. Launcher arrangement reworked per M8.4b.
 
 ## Next / post-v1
 
