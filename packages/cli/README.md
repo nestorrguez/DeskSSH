@@ -1,8 +1,12 @@
 # DeskSSH
 
-**A graphical desktop over plain SSH.** The GUI is synthesized on the client and
-every action is translated into commands executed on the remote host. _Not remote
-desktop. Agentless._
+**One Desk, Any Machine. Just SSH.**
+
+A graphical desktop over plain SSH — the GUI is synthesized on the client and every
+action is translated into commands run on the remote host. _Not remote desktop.
+Agentless._
+
+![DeskSSH in action](https://raw.githubusercontent.com/nestorrguez/DeskSSH/main/docs/demo.gif)
 
 ## Run it
 
@@ -20,16 +24,17 @@ deskssh
 ```
 
 This starts DeskSSH on `http://127.0.0.1:8717` and opens your browser. Enter a
-server's host, port, user and a password or private key, and you get a familiar
-desktop — file manager, terminal, text editor (Stallman), system monitor — all
+server's **host, port, user** and a **password or private key (PEM)**, and you get a
+familiar desktop — file manager, terminal, code editor (Monaco), system monitor with
+process & service control, privilege elevation, system info and command history — all
 over plain SSH.
 
 > It binds to `127.0.0.1` by default (it is an SSH gateway and should not be
 > exposed by accident). Override with `HOST` / `PORT` env vars if you know what
 > you're doing.
 
-Requirements: **Node.js >= 20**. Remote host: a Linux server with SSH
-(Debian/Ubuntu/Mint in v1).
+**Requirements:** Node.js **>= 20** locally. Remote host: a Linux server with SSH
+(Debian/Ubuntu/Mint in v1). Nothing installed on the server — no agent, no daemon.
 
 ## Links
 
