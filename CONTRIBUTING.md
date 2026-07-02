@@ -47,10 +47,17 @@ pnpm format         # apply Prettier
 CI runs format-check, lint, typecheck, test and build on every push/PR — please make
 sure they pass locally first.
 
-## Commits & pull requests
+## Branching, commits & pull requests
 
-- Keep commits focused; write clear messages in English.
-- Describe **what** and **why**, and reference the `FR-`/Article involved.
+Full details in **[`docs/git-workflow.md`](docs/git-workflow.md)**. In short:
+
+- **Branch off `develop`** on a short-lived branch (`feat/…`, `fix/…`, `docs/…`, or
+  `NNN-slug` for a spec epic). Open a **PR into `develop`**; CI must pass; delete the
+  branch after merge.
+- **`main` is releases only** — never commit to it directly. A release merges
+  `develop → main` and tags `vX.Y.Z`.
+- **Conventional Commits**: `type(scope): imperative subject`, in English. Describe
+  **what** and **why**, and reference the `FR-`/Article involved.
 - Be kind and constructive. DeskSSH aims to be a welcoming, accessibility-first
   project.
 
