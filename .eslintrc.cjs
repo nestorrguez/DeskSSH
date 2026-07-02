@@ -14,7 +14,7 @@ module.exports = {
     node: true,
     browser: true,
   },
-  ignorePatterns: ['dist', 'node_modules', '*.cjs'],
+  ignorePatterns: ['dist', 'node_modules', '*.cjs', 'packages/web/public/runtime'],
   rules: {
     '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
   },

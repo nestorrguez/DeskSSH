@@ -15,11 +15,40 @@ import { FileKnownHosts } from './known-hosts.js';
 import { attachTerminal } from './terminal.js';
 import { serveStatic } from './static.js';
 import { makeElevated, type Elevate } from './elevate.js';
-import { detectPrivilege } from '@deskssh/core';
+import { createReadStream } from 'node:fs';
+import { extname } from 'node:path';
+import {
+  detectPrivilege,
+  adapterCatalog,
+  CONTRACT_VERSION,
+  APP_RUNTIME_VERSION,
+} from '@deskssh/core';
+import {
+  importAdapterPlugin,
+  importAppPlugin,
+  loadAppPlugins,
+  pluginsStatus,
+  resolveAppFile,
+  setPluginEnabled,
+  uninstallPlugin,
+} from './plugins.js';
 import type { Capabilities, CapabilityResult } from '@deskssh/core';
 import type { SessionEntry } from './session-manager.js';
 
 const MAX_BODY_BYTES = 1_000_000; // PEM keys are small; cap to avoid abuse.
+const MAX_ZIP_BYTES = 25_000_000; // App plugins bundle JS + assets; allow a larger cap.
+
+const APP_MIME: Record<string, string> = {
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+};
 
 export interface GatewayDeps {
   readonly manager?: SessionManager;
@@ -59,6 +88,25 @@ function readJsonBody(req: IncomingMessage): Promise<unknown> {
         reject(new HttpError(400, 'Invalid JSON body'));
       }
     });
+    req.on('error', reject);
+  });
+}
+
+/** Read a raw binary request body (for `.zip` app import), capped larger than JSON. */
+function readRawBody(req: IncomingMessage): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > MAX_ZIP_BYTES) {
+        reject(new HttpError(413, 'Request body too large'));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
 }
@@ -158,6 +206,83 @@ async function handle(
   }
 
   if (route === 'GET /api/health') return sendJson(res, 200, { ok: true });
+
+  // Installed OS adapters, for the Extensions view (FR-230). Sessionless: it is
+  // static server capability info, shown on the connection screen before login.
+  if (route === 'GET /api/adapters') return sendJson(res, 200, { adapters: adapterCatalog() });
+
+  // The Desk's own versions (spec 002, FR-241 / E9.2). Sessionless: shown in the Settings
+  // About section so plugin authors know the Contract + app-runtime ranges to target.
+  if (route === 'GET /api/versions') {
+    return sendJson(res, 200, { contract: CONTRACT_VERSION, appRuntime: APP_RUNTIME_VERSION });
+  }
+
+  // Import a plugin. Sessionless and local-only (the gateway binds 127.0.0.1): it
+  // validates + places the package into the user's plugins folder, picked up on the
+  // next restart (FR-251 / E10.2). An **adapter** is a JSON manifest body; an **app**
+  // is a `.zip` body (binary content-type) → extract + validate + place (E10.2b).
+  if (route === 'POST /api/plugins/import') {
+    const contentType = req.headers['content-type'] ?? '';
+    const result = contentType.includes('json')
+      ? importAdapterPlugin(await readJsonBody(req))
+      : importAppPlugin(new Uint8Array(await readRawBody(req)));
+    return result.ok ? sendJson(res, 200, result) : sendJson(res, 400, { error: result.reason });
+  }
+
+  // Full status of installed plugins for the Settings manager (E10.3b).
+  if (route === 'GET /api/plugins') return sendJson(res, 200, { plugins: pluginsStatus() });
+
+  // Enable/disable a plugin (persisted; restart/reload to apply) (E10.3b).
+  if (route === 'POST /api/plugins/enable') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const kind = asOneOf(body, 'kind', ['adapter', 'app'] as const);
+    setPluginEnabled(kind, asString(body, 'id'), body['enabled'] !== false);
+    return sendJson(res, 200, { ok: true });
+  }
+
+  // Uninstall a plugin: remove its files (E10.3b).
+  if (route === 'POST /api/plugins/uninstall') {
+    const body = (await readJsonBody(req)) as Record<string, unknown>;
+    const kind = asOneOf(body, 'kind', ['adapter', 'app'] as const);
+    return sendJson(res, 200, { ok: uninstallPlugin(kind, asString(body, 'id')) });
+  }
+
+  // The list of loadable app plugins (id, entry URL, capabilities) the web imports at
+  // boot (E10.4b). Sessionless: app availability is static, decided before login.
+  if (route === 'GET /api/plugins/apps') {
+    const { apps } = loadAppPlugins();
+    return sendJson(res, 200, {
+      apps: apps.map((a) => ({
+        id: a.id,
+        name: a.name,
+        version: a.version,
+        entry: `/api/plugins/apps/${encodeURIComponent(a.id)}/${a.entry}`,
+        capabilities: a.capabilities,
+        ...(a.icon ? { icon: a.icon } : {}),
+        ...(a.category ? { category: a.category } : {}),
+        author: a.author,
+      })),
+    });
+  }
+
+  // Serve an app plugin's built asset (its ESM entry + bundled files) (E10.4b).
+  if (req.method === 'GET' && url.pathname.startsWith('/api/plugins/apps/')) {
+    const tail = url.pathname.slice('/api/plugins/apps/'.length);
+    const slash = tail.indexOf('/');
+    if (slash > 0) {
+      const id = decodeURIComponent(tail.slice(0, slash));
+      const rel = decodeURIComponent(tail.slice(slash + 1));
+      const file = resolveAppFile(id, rel);
+      if (file) {
+        res.writeHead(200, {
+          'content-type': APP_MIME[extname(file)] ?? 'application/octet-stream',
+        });
+        createReadStream(file).pipe(res);
+        return;
+      }
+    }
+    return sendJson(res, 404, { error: 'not found' });
+  }
 
   if (route === 'POST /api/connect') {
     const body = (await readJsonBody(req)) as Record<string, unknown>;

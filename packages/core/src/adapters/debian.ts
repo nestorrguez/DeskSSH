@@ -22,7 +22,7 @@ import type {
 } from '../contract/types.js';
 import { quote } from './shell.js';
 
-const FIND_PRINTF = String.raw`%y\t%s\t%m\t%u\t%g\t%T@\t%f\n`;
+export const FIND_PRINTF = String.raw`%y\t%s\t%m\t%u\t%g\t%T@\t%f\n`;
 const STAT_PRINTF = String.raw`%F\t%s\t%a\t%U\t%G\t%Y\t%n`;
 
 function fileTypeFromFindCode(code: string): FileType {
@@ -145,7 +145,7 @@ export function parseSystemMetrics(stdout: string): SystemMetrics {
   };
 }
 
-const METRICS_COMMAND =
+export const METRICS_COMMAND =
   'echo ===UPTIME===; cat /proc/uptime; ' +
   'echo ===LOAD===; cat /proc/loadavg; ' +
   'echo ===MEM===; cat /proc/meminfo';

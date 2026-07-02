@@ -5,6 +5,7 @@ import { useWindows } from './useWindows';
 import { Window } from './Window';
 import { Taskbar } from './Taskbar';
 import { getApps } from './apps/index';
+import { getDisabledApps } from '@/features/settings/apps';
 import type { AppContext } from './types';
 
 interface DesktopProps {
@@ -16,6 +17,24 @@ interface DesktopProps {
 /** The connected experience: a desktop with windows, a launcher and a taskbar. */
 export function Desktop({ t, session, onDisconnect }: DesktopProps) {
   const apps = useMemo(() => getApps(t), [t]);
+  // Apps the user disabled in Settings are hidden from the launcher (read once: the
+  // choice is made pre-login). The full list still backs cross-app open + window render.
+  const launcherApps = useMemo(() => {
+    const disabled = getDisabledApps();
+    return apps.filter((a) => !disabled.has(a.id));
+  }, [apps]);
+  // Graceful-degrade (FR-203 / E4.3): the contract is universal, so a missing capability
+  // means the host's adapter is older than that contract capability (version skew, E9.3),
+  // not that the OS can't. Such apps are shown disabled in the launcher, with the reason.
+  const unsupported = useMemo(() => {
+    const hostCaps = new Set(session.capabilities);
+    const map: Record<string, string> = {};
+    for (const app of launcherApps) {
+      const missing = (app.capabilities ?? []).filter((c) => !hostCaps.has(c));
+      if (missing.length > 0) map[app.id] = t('desktop.unsupported', { caps: missing.join(', ') });
+    }
+    return map;
+  }, [launcherApps, session.capabilities, t]);
   const wm = useWindows();
   const [editorTarget, setEditorTarget] = useState<string | null>(null);
   const [imageTarget, setImageTarget] = useState<string | null>(null);
@@ -134,7 +153,8 @@ export function Desktop({ t, session, onDisconnect }: DesktopProps) {
 
       <Taskbar
         t={t}
-        apps={apps}
+        apps={launcherApps}
+        unsupported={unsupported}
         windows={wm.windows}
         activeId={activeId}
         session={session}

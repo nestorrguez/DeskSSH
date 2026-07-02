@@ -51,13 +51,21 @@ independent of presentation**. This allows serving a web app and, with the same
 core, delivering it either hosted or self-hosted (npm). No business rule lives in
 UI components.
 
-## Article 6 — Portability through adapters
+## Article 6 — Portability through a universal contract
 
 Servers differ (Debian/Ubuntu, RHEL/Fedora, Arch, BSD; `bash`/`sh`; GNU vs BSD
 coreutils). The differences are isolated in an **adapter layer**. The rest of the
 system talks to a uniform interface and assumes no specific distro. Machine-
 readable output (`stat -c`, `ps -eo`, `--json` flags where available) is preferred
 over parsing human-formatted text.
+
+The **capability contract is the single universal abstraction** the whole system
+reads; adapters only _translate_ it to per-OS commands. The contract is therefore
+designed at a level **every supported OS can fulfill**. If an OS genuinely cannot
+express a contract function, that is a signal to **restructure the contract** (raise
+its abstraction, a versioned change) — not to leave a permanent per-OS hole.
+"Unsupported" is reserved for **version skew** (an adapter older than a newly-added
+capability), handled by graceful degradation (Art. 7).
 
 ## Article 7 — Resilience and graceful degradation
 

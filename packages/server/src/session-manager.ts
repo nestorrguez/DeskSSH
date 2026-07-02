@@ -4,6 +4,7 @@
 // module is pure and transport-agnostic, so it is unit-testable without SSH.
 
 import { randomUUID } from 'node:crypto';
+import { selectProvider } from '@deskssh/core';
 import type {
   Capabilities,
   CommandExecutor,
@@ -40,6 +41,9 @@ export interface SessionInfo {
   readonly host: string;
   readonly home: string;
   readonly os: { readonly family: string; readonly prettyName?: string };
+  /** Capabilities the connected host's adapter implements — drives the web's
+   *  graceful-degrade of apps (FR-203/241, E4.3/E9.3). */
+  readonly capabilities: readonly string[];
 }
 
 export function toSessionInfo(entry: SessionEntry): SessionInfo {
@@ -48,6 +52,7 @@ export function toSessionInfo(entry: SessionEntry): SessionInfo {
     host: entry.host,
     home: entry.home,
     os: { family: entry.os.family, prettyName: entry.os.prettyName },
+    capabilities: selectProvider(entry.os)?.capabilities ?? [],
   };
 }
 

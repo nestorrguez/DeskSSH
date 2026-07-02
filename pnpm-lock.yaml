@@ -67,6 +67,9 @@ importers:
       '@deskssh/core':
         specifier: workspace:*
         version: link:../core
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
       ws:
         specifier: ^8.21.0
         version: 8.21.0
@@ -144,6 +147,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.3.1
         version: 4.7.0(vite@5.4.21(@types/node@20.19.43)(lightningcss@1.32.0))
+      esbuild:
+        specifier: ^0.28.1
+        version: 0.28.1
       vite:
         specifier: ^5.3.1
         version: 5.4.21(@types/node@20.19.43)(lightningcss@1.32.0)
@@ -2135,6 +2141,9 @@ packages:
 
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
+
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
 
   file-entry-cache@6.0.1:
     resolution: {integrity: sha512-7Gps/XWymbLk2QLYK4NzpMOrYjMhdIxXuIvy2QBsLE6ljuodKvdkWs/cpyJJ3CVIVpH0Oi1Hvg1ovbMzLdFBBg==}
@@ -4922,6 +4931,8 @@ snapshots:
   fastq@1.20.1:
     dependencies:
       reusify: 1.1.0
+
+  fflate@0.8.3: {}
 
   file-entry-cache@6.0.1:
     dependencies:

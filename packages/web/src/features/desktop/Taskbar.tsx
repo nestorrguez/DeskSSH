@@ -11,6 +11,8 @@ import type { AppDefinition, WindowState } from './types';
 interface TaskbarProps {
   t: Translator;
   apps: AppDefinition[];
+  /** appId → reason, for apps the connected host can't support (E4.3). */
+  unsupported?: Record<string, string>;
   windows: WindowState[];
   activeId: string | null;
   session: SessionInfo;
@@ -35,6 +37,7 @@ function Clock() {
 export function Taskbar({
   t,
   apps,
+  unsupported,
   windows,
   activeId,
   session,
@@ -78,6 +81,20 @@ export function Taskbar({
                 .sort((a, b) => a.title.localeCompare(b.title))
                 .map((app) => {
                   const Icon = app.icon;
+                  const reason = unsupported?.[app.id];
+                  if (reason) {
+                    return (
+                      <div
+                        key={app.id}
+                        title={reason}
+                        aria-disabled
+                        className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sm opacity-40"
+                      >
+                        <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                        <span className="truncate">{app.title}</span>
+                      </div>
+                    );
+                  }
                   return (
                     <button
                       key={app.id}

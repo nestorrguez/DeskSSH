@@ -1,6 +1,6 @@
 {
   "name": "deskssh",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "A graphical desktop over plain SSH — run it locally and manage your servers from the browser.",
   "license": "AGPL-3.0-or-later",
   "type": "module",

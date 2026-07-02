@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DeskSSH</title>
+    <!-- Shared-runtime import map (spec 002, E10.4d). The Desk and its app plugins
+         resolve these specifiers to one shared ESM bundle each (served at /runtime/*),
+         so a single React / UI / icon instance is used across host and plugins. Must
+         mirror SHARED_RUNTIME in vite-shared-runtime.ts. -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "/runtime/react.js",
+          "react-dom": "/runtime/react-dom.js",
+          "react-dom/client": "/runtime/react-dom.js",
+          "react/jsx-runtime": "/runtime/jsx-runtime.js",
+          "react/jsx-dev-runtime": "/runtime/jsx-dev-runtime.js",
+          "@deskssh/app-runtime": "/runtime/app-runtime.js"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
